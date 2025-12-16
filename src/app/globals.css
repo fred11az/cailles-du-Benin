@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans antialiased text-text-primary bg-background;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-6 rounded-xl
+           transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]
+           shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30;
+  }
+
+  .btn-secondary {
+    @apply bg-white border-2 border-primary text-primary font-semibold py-3 px-6 rounded-xl
+           transition-all duration-300 hover:bg-primary hover:text-white;
+  }
+
+  .btn-outline {
+    @apply border-2 border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg
+           transition-all duration-200 hover:border-primary hover:text-primary;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-lg shadow-gray-100 p-6
+           transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-xl
+           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
+           transition-all duration-200 placeholder:text-gray-400;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .badge-pending {
+    @apply badge bg-yellow-100 text-yellow-800;
+  }
+
+  .badge-validated {
+    @apply badge bg-blue-100 text-blue-800;
+  }
+
+  .badge-delivered {
+    @apply badge bg-green-100 text-green-800;
+  }
+
+  .badge-cancelled {
+    @apply badge bg-red-100 text-red-800;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .slide-in {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}
+
+/* Hide number input arrows */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
