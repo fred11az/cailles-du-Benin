@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter } from 'lucide-react'
 
 export default function Footer() {
@@ -12,13 +13,18 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
           {/* À propos */}
           <div>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">MF</span>
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="relative w-14 h-14 flex-shrink-0">
+                <Image
+                  src="/images/logo.png"
+                  alt="Mahutin Ferme Logo"
+                  fill
+                  className="object-contain"
+                />
               </div>
               <div>
                 <h3 className="font-bold text-lg">Mahutin Ferme</h3>
-                <p className="text-xs text-primary">Cailles du Bénin</p>
+                <p className="text-xs text-primary">Agro-Pastorale</p>
               </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
