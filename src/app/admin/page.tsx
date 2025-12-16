@@ -650,7 +650,7 @@ function ProductionTab() {
             </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg">Traiter des cailles</h3>
-              <p className="text-sm text-gray-600">Enregistrer l'abattage et la viande</p>
+              <p className="text-sm text-gray-600">Enregistrer l&apos;abattage et la viande</p>
             </div>
           </div>
         </button>
@@ -711,7 +711,7 @@ function ProductionTab() {
         <Modal title="Ramasser des œufs" onClose={() => setShowCollectModal(false)}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre d'œufs collectés</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre d&apos;œufs collectés</label>
               <input
                 type="number"
                 value={eggsToCollect || ''}
