@@ -182,8 +182,12 @@ export const useStore = create<StoreState>()(
                 const eggsToDeduct = item.quantity * 30
                 newProductionStats.totalEggsInStock = Math.max(0, newProductionStats.totalEggsInStock - eggsToDeduct)
               } else if (item.product.category === 'meat') {
-                // Déduire la viande en kg
+                // Déduire la viande en kg du stock
                 newProductionStats.totalMeatInStock = Math.max(0, newProductionStats.totalMeatInStock - item.quantity)
+                // Déduire du nombre de mâles (environ 5 cailles mâles par kg de viande)
+                const malesToDeduct = Math.ceil(item.quantity * 5)
+                newProductionStats.maleQuails = Math.max(0, newProductionStats.maleQuails - malesToDeduct)
+                newProductionStats.totalQuails = Math.max(0, newProductionStats.totalQuails - malesToDeduct)
               }
             })
             newProductionStats.lastUpdated = new Date().toISOString()
