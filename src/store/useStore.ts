@@ -248,9 +248,10 @@ export const useStore = create<StoreState>()(
       },
       getTotalRevenue: () => {
         const { orders } = get()
+        // Utiliser subtotal (sans frais de livraison) pour la comptabilité interne
         return orders
           .filter((o) => o.status === 'delivered' || o.status === 'validated')
-          .reduce((total, o) => total + o.total, 0)
+          .reduce((total, o) => total + o.subtotal, 0)
       },
       getNetProfit: () => {
         const { getTotalRevenue, getTotalExpenses } = get()

@@ -82,12 +82,13 @@ export default function AdminPage() {
     return {
       totalOrders: orders.length,
       pendingOrders: orders.filter((o) => o.status === 'pending').length,
+      // Utiliser subtotal (sans frais de livraison) pour le CA
       todayRevenue: todayOrders
         .filter((o) => o.status !== 'cancelled')
-        .reduce((sum, o) => sum + o.total, 0),
+        .reduce((sum, o) => sum + o.subtotal, 0),
       monthRevenue: monthOrders
         .filter((o) => o.status !== 'cancelled')
-        .reduce((sum, o) => sum + o.total, 0),
+        .reduce((sum, o) => sum + o.subtotal, 0),
     }
   }, [orders])
 
