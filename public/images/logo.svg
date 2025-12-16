@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Cercle vert extérieur -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="#228B22" stroke-width="6"/>
+
+  <!-- Fond blanc -->
+  <circle cx="100" cy="100" r="90" fill="white"/>
+
+  <!-- Texte MAHUTIN -->
+  <text x="100" y="45" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="22" font-weight="bold" fill="#D2691E">MAHUTIN</text>
+
+  <!-- Icône ferme simplifiée -->
+  <g transform="translate(100, 100)">
+    <!-- Tracteur simplifié -->
+    <rect x="-25" y="-15" width="40" height="25" rx="3" fill="#8B4513"/>
+    <rect x="-15" y="-25" width="20" height="12" rx="2" fill="#8B4513"/>
+    <circle cx="-15" cy="15" r="12" fill="#8B4513"/>
+    <circle cx="20" cy="15" r="8" fill="#8B4513"/>
+
+    <!-- Herbe -->
+    <path d="M-50 25 Q-40 20 -30 25 Q-20 20 -10 25 Q0 20 10 25 Q20 20 30 25 Q40 20 50 25" fill="none" stroke="#90EE90" stroke-width="3"/>
+  </g>
+
+  <!-- Texte FERME -->
+  <text x="100" y="155" text-anchor="middle" font-family="Arial Black, sans-serif" font-size="24" font-weight="bold" fill="#000">FERME</text>
+
+  <!-- Texte AGRO-PASTORALE -->
+  <text x="100" y="175" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#000" font-style="italic">AGRO - PASTORALE</text>
+</svg>

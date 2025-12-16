@@ -21,7 +21,7 @@ export default function Header() {
           <Link href="/" className="flex items-center space-x-2">
             <div className="relative w-12 h-12 md:w-16 md:h-16">
               <Image
-                src="/images/logo.png"
+                src="/images/logo.svg"
                 alt="Mahutin Ferme Logo"
                 fill
                 className="object-contain"

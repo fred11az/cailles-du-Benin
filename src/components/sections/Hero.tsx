@@ -78,7 +78,7 @@ export default function Hero() {
               {/* Image principale */}
               <div className="absolute inset-4 rounded-full overflow-hidden shadow-2xl shadow-primary/20">
                 <Image
-                  src="https://images.unsplash.com/photo-1569127959161-2b1297b2d9a6?w=800&q=80"
+                  src="/images/hero-quail.jpg"
                   alt="Oeufs de caille frais de Mahutin Ferme"
                   fill
                   className="object-cover"
