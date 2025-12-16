@@ -81,10 +81,24 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#22C55E" />
+        <meta name="theme-color" content="#228B22" />
       </head>
-      <body className="min-h-screen">
-        {children}
+      <body className="min-h-screen relative">
+        {/* Background image with transparency */}
+        <div
+          className="fixed inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: 'url(/images/quails-bg.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: 0.08,
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative z-10">
+          {children}
+        </div>
       </body>
     </html>
   )

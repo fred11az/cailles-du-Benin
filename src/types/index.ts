@@ -89,8 +89,9 @@ export interface ProductionStats {
   femaleQuails: number;
   eggsCollectedToday: number;
   totalEggsInStock: number; // En nombre d'oeufs (pas plateaux)
-  totalMeatInStock: number; // En kg
+  totalMeatInStock: number; // En unités de caille
   lastUpdated: string;
+  lastUpdatedBy?: string; // Admin qui a fait la dernière mise à jour
 }
 
 export interface DailyProduction {
@@ -100,6 +101,7 @@ export interface DailyProduction {
   quailsProcessed: number; // Cailles abattues
   notes?: string;
   createdAt: string;
+  createdBy?: string; // Admin qui a enregistré cette production
 }
 
 // Types pour les catégories de dépenses avec labels

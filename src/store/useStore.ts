@@ -10,8 +10,8 @@ const initialProducts: Product[] = [
     id: '1',
     name: 'Oeufs de Cailles - Plateau de 30',
     description: 'Oeufs de caille frais de notre ferme, riches en protéines et en nutriments. Plateau de 30 œufs parfaits pour une alimentation saine.',
-    price: 2500,
-    unit: 'plateau de 30',
+    price: 1000,
+    unit: 'plateau',
     category: 'eggs',
     image: '/images/eggs.jpg',
     stock: 100,
@@ -20,9 +20,9 @@ const initialProducts: Product[] = [
   {
     id: '2',
     name: 'Viande de Caille Déplumée',
-    description: 'Viande de caille fraîche, soigneusement déplumée et nettoyée, prête à cuisiner. Idéale pour vos grillades et plats raffinés.',
-    price: 15000,
-    unit: 'kg',
+    description: 'Caille entière fraîche, soigneusement déplumée et nettoyée, prête à cuisiner. Idéale pour vos grillades et plats raffinés.',
+    price: 1200,
+    unit: 'unité',
     category: 'meat',
     image: '/images/meat.jpg',
     stock: 50,
@@ -182,12 +182,11 @@ export const useStore = create<StoreState>()(
                 const eggsToDeduct = item.quantity * 30
                 newProductionStats.totalEggsInStock = Math.max(0, newProductionStats.totalEggsInStock - eggsToDeduct)
               } else if (item.product.category === 'meat') {
-                // Déduire la viande en kg du stock
+                // Déduire la viande (par unité de caille)
                 newProductionStats.totalMeatInStock = Math.max(0, newProductionStats.totalMeatInStock - item.quantity)
-                // Déduire du nombre de mâles (environ 5 cailles mâles par kg de viande)
-                const malesToDeduct = Math.ceil(item.quantity * 5)
-                newProductionStats.maleQuails = Math.max(0, newProductionStats.maleQuails - malesToDeduct)
-                newProductionStats.totalQuails = Math.max(0, newProductionStats.totalQuails - malesToDeduct)
+                // Déduire du nombre de mâles (1 commande = 1 caille mâle)
+                newProductionStats.maleQuails = Math.max(0, newProductionStats.maleQuails - item.quantity)
+                newProductionStats.totalQuails = Math.max(0, newProductionStats.totalQuails - item.quantity)
               }
             })
             newProductionStats.lastUpdated = new Date().toISOString()

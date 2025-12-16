@@ -270,7 +270,7 @@ function DashboardTab({
           icon={Egg}
           color="yellow"
         />
-        <StatCard title="Viande en stock" value={`${productionStats.totalMeatInStock} kg`} icon={Scale} color="red" />
+        <StatCard title="Viande en stock" value={`${productionStats.totalMeatInStock} unités`} icon={Scale} color="red" />
         <StatCard title="Cailles totales" value={productionStats.totalQuails.toString()} icon={Bird} color="blue" />
         <StatCard
           title="Bénéfice net"
@@ -473,7 +473,12 @@ function AccountingTab() {
               <tbody>
                 {expenses.map((expense) => (
                   <tr key={expense.id} className="border-b hover:bg-gray-50">
-                    <td className="p-4">{formatDate(expense.date)}</td>
+                    <td className="p-4">
+                      {formatDate(expense.date)}
+                      {expense.createdBy && (
+                        <span className="block text-xs text-gray-400 lowercase">(par {expense.createdBy})</span>
+                      )}
+                    </td>
                     <td className="p-4">
                       <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-sm">
                         {EXPENSE_CATEGORIES.find((c) => c.value === expense.category)?.label}
@@ -508,13 +513,13 @@ function ProductionTab() {
   const processQuails = useStore((state) => state.processQuails)
   const dailyProductions = useStore((state) => state.dailyProductions)
   const addDailyProduction = useStore((state) => state.addDailyProduction)
+  const adminSession = useStore((state) => state.adminSession)
 
   const [showCollectModal, setShowCollectModal] = useState(false)
   const [showProcessModal, setShowProcessModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [eggsToCollect, setEggsToCollect] = useState(0)
   const [quailsToProcess, setQuailsToProcess] = useState(0)
-  const [meatProduced, setMeatProduced] = useState(0)
   const [editStats, setEditStats] = useState(productionStats)
 
   const handleCollectEggs = () => {
@@ -526,6 +531,7 @@ function ProductionTab() {
         eggsCollected: eggsToCollect,
         quailsProcessed: 0,
         createdAt: new Date().toISOString(),
+        createdBy: adminSession.adminName,
       })
       setEggsToCollect(0)
       setShowCollectModal(false)
@@ -533,24 +539,25 @@ function ProductionTab() {
   }
 
   const handleProcessQuails = () => {
-    if (quailsToProcess > 0 && meatProduced > 0) {
-      processQuails(quailsToProcess, meatProduced)
+    if (quailsToProcess > 0) {
+      // 1 caille traitée = 1 unité de viande
+      processQuails(quailsToProcess, quailsToProcess)
       addDailyProduction({
         id: crypto.randomUUID(),
         date: new Date().toISOString().split('T')[0],
         eggsCollected: 0,
         quailsProcessed: quailsToProcess,
-        notes: `${meatProduced} kg de viande produite`,
+        notes: `${quailsToProcess} unités de viande produites`,
         createdAt: new Date().toISOString(),
+        createdBy: adminSession.adminName,
       })
       setQuailsToProcess(0)
-      setMeatProduced(0)
       setShowProcessModal(false)
     }
   }
 
   const handleSaveStats = () => {
-    updateProductionStats(editStats)
+    updateProductionStats({ ...editStats, lastUpdatedBy: adminSession.adminName })
     setShowEditModal(false)
   }
 
@@ -603,11 +610,16 @@ function ProductionTab() {
               <Scale className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Viande en stock</p>
-              <p className="text-2xl font-bold text-gray-900">{productionStats.totalMeatInStock} kg</p>
+              <p className="text-sm text-gray-500">Cailles prêtes (viande)</p>
+              <p className="text-2xl font-bold text-gray-900">{productionStats.totalMeatInStock} unités</p>
             </div>
           </div>
-          <p className="text-sm text-gray-500">Dernière mise à jour: {formatDate(productionStats.lastUpdated)}</p>
+          <p className="text-sm text-gray-500">
+            Dernière mise à jour: {formatDate(productionStats.lastUpdated)}
+            {productionStats.lastUpdatedBy && (
+              <span className="lowercase"> (par {productionStats.lastUpdatedBy})</span>
+            )}
+          </p>
         </div>
       </div>
 
@@ -665,7 +677,12 @@ function ProductionTab() {
               <tbody>
                 {dailyProductions.slice(0, 20).map((prod) => (
                   <tr key={prod.id} className="border-b">
-                    <td className="p-4">{formatDate(prod.date)}</td>
+                    <td className="p-4">
+                      {formatDate(prod.date)}
+                      {prod.createdBy && (
+                        <span className="block text-xs text-gray-400 lowercase">(par {prod.createdBy})</span>
+                      )}
+                    </td>
                     <td className="p-4">
                       {prod.eggsCollected > 0 && (
                         <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
@@ -718,7 +735,7 @@ function ProductionTab() {
         <Modal title="Traiter des cailles" onClose={() => setShowProcessModal(false)}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de cailles traitées</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de cailles à traiter (mâles)</label>
               <input
                 type="number"
                 value={quailsToProcess || ''}
@@ -726,17 +743,9 @@ function ProductionTab() {
                 className="input-field"
                 placeholder="Ex: 20"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Viande produite (kg)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={meatProduced || ''}
-                onChange={(e) => setMeatProduced(Number(e.target.value))}
-                className="input-field"
-                placeholder="Ex: 3.5"
-              />
+              {quailsToProcess > 0 && (
+                <p className="text-sm text-gray-500 mt-1">= {quailsToProcess} unités de viande</p>
+              )}
             </div>
             <button onClick={handleProcessQuails} className="btn-primary w-full">
               Enregistrer le traitement
@@ -787,10 +796,9 @@ function ProductionTab() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Viande en stock (kg)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Viande en stock (unités)</label>
                 <input
                   type="number"
-                  step="0.1"
                   value={editStats.totalMeatInStock}
                   onChange={(e) => setEditStats({ ...editStats, totalMeatInStock: Number(e.target.value) })}
                   className="input-field"

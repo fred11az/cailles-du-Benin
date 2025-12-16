@@ -103,7 +103,7 @@ export default function Hero() {
               {/* Badge prix */}
               <div className="absolute -top-2 -right-2 md:top-4 md:right-0 bg-primary text-white rounded-2xl shadow-xl p-4 animate-fade-in">
                 <p className="text-sm font-medium">À partir de</p>
-                <p className="text-2xl font-bold">2500 FCFA</p>
+                <p className="text-2xl font-bold">1000 FCFA</p>
               </div>
             </div>
           </div>
