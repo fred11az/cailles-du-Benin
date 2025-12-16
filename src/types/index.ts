@@ -60,3 +60,58 @@ export interface AdminSession {
   isAuthenticated: boolean;
   adminName?: string;
 }
+
+// Types pour la comptabilité
+export type ExpenseCategory =
+  | 'provende'
+  | 'medicament'
+  | 'equipement'
+  | 'salaire'
+  | 'transport'
+  | 'electricite'
+  | 'eau'
+  | 'autre';
+
+export interface Expense {
+  id: string;
+  date: string;
+  category: ExpenseCategory;
+  description: string;
+  amount: number;
+  createdAt: string;
+  createdBy?: string;
+}
+
+// Types pour le suivi de production
+export interface ProductionStats {
+  totalQuails: number;
+  maleQuails: number;
+  femaleQuails: number;
+  eggsCollectedToday: number;
+  totalEggsInStock: number; // En nombre d'oeufs (pas plateaux)
+  totalMeatInStock: number; // En unités de caille
+  lastUpdated: string;
+  lastUpdatedBy?: string; // Admin qui a fait la dernière mise à jour
+}
+
+export interface DailyProduction {
+  id: string;
+  date: string;
+  eggsCollected: number;
+  quailsProcessed: number; // Cailles abattues
+  notes?: string;
+  createdAt: string;
+  createdBy?: string; // Admin qui a enregistré cette production
+}
+
+// Types pour les catégories de dépenses avec labels
+export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
+  { value: 'provende', label: 'Provende / Aliments' },
+  { value: 'medicament', label: 'Médicaments / Vétérinaire' },
+  { value: 'equipement', label: 'Équipement' },
+  { value: 'salaire', label: 'Salaires' },
+  { value: 'transport', label: 'Transport' },
+  { value: 'electricite', label: 'Électricité' },
+  { value: 'eau', label: 'Eau' },
+  { value: 'autre', label: 'Autre' },
+];

@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS orders (
 
 -- Insertion des données initiales - Produits
 INSERT INTO products (name, description, price, unit, category, image, stock, is_available) VALUES
-  ('Oeufs de Cailles - Plateau de 30', 'Oeufs de caille frais de notre ferme, riches en protéines et en nutriments. Plateau de 30 œufs parfaits pour une alimentation saine.', 2500, 'plateau de 30', 'eggs', 'https://images.unsplash.com/photo-1498654077810-12c21d4d6dc3?w=800&q=80', 100, true),
-  ('Viande de Caille Déplumée', 'Viande de caille fraîche, soigneusement déplumée et nettoyée, prête à cuisiner. Idéale pour vos grillades et plats raffinés.', 15000, 'kg', 'meat', 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=800&q=80', 50, true)
+  ('Oeufs de Cailles - Plateau de 30', 'Oeufs de caille frais de notre ferme, riches en protéines et en nutriments. Plateau de 30 œufs parfaits pour une alimentation saine.', 1000, 'plateau', 'eggs', '/images/eggs.jpg', 100, true),
+  ('Viande de Caille Déplumée', 'Caille entière fraîche, soigneusement déplumée et nettoyée, prête à cuisiner. Idéale pour vos grillades et plats raffinés.', 1200, 'unité', 'meat', '/images/meat.jpg', 50, true)
 ON CONFLICT DO NOTHING;
 
 -- Insertion des données initiales - Zones de livraison

@@ -16,7 +16,7 @@ export default function Footer() {
             <div className="flex items-center space-x-3 mb-4">
               <div className="relative w-14 h-14 flex-shrink-0">
                 <Image
-                  src="/images/logo.png"
+                  src="/images/logo.svg"
                   alt="Mahutin Ferme Logo"
                   fill
                   className="object-contain"
