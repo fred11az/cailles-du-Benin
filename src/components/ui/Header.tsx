@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { ShoppingCart, Menu, X, Phone } from 'lucide-react'
 import { useStore } from '@/store/useStore'
@@ -18,12 +19,18 @@ export default function Header() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg md:text-xl">MF</span>
+            <div className="relative w-12 h-12 md:w-16 md:h-16">
+              <Image
+                src="/images/logo.png"
+                alt="Mahutin Ferme Logo"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
             <div className="hidden sm:block">
               <h1 className="text-lg md:text-xl font-bold text-gray-900">Mahutin Ferme</h1>
-              <p className="text-xs text-primary font-medium">Cailles du Bénin</p>
+              <p className="text-xs text-primary font-medium">Agro-Pastorale</p>
             </div>
           </Link>
 

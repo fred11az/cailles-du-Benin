@@ -6,7 +6,7 @@ import { ArrowRight, Truck, Shield, Leaf } from 'lucide-react'
 
 export default function Hero() {
   return (
-    <section className="relative bg-gradient-to-br from-green-50 via-white to-green-50 overflow-hidden">
+    <section className="relative bg-gradient-to-br from-emerald-50 via-white to-green-50 overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-30">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
@@ -78,7 +78,7 @@ export default function Hero() {
               {/* Image principale */}
               <div className="absolute inset-4 rounded-full overflow-hidden shadow-2xl shadow-primary/20">
                 <Image
-                  src="/images/hero-quail.jpg"
+                  src="https://images.unsplash.com/photo-1569127959161-2b1297b2d9a6?w=800&q=80"
                   alt="Oeufs de caille frais de Mahutin Ferme"
                   fill
                   className="object-cover"
@@ -103,7 +103,7 @@ export default function Hero() {
               {/* Badge prix */}
               <div className="absolute -top-2 -right-2 md:top-4 md:right-0 bg-primary text-white rounded-2xl shadow-xl p-4 animate-fade-in">
                 <p className="text-sm font-medium">À partir de</p>
-                <p className="text-2xl font-bold">2000 FCFA</p>
+                <p className="text-2xl font-bold">2500 FCFA</p>
               </div>
             </div>
           </div>
