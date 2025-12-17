@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import SupabaseProvider from '@/components/providers/SupabaseProvider'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://cailledubenin.com'),
@@ -102,7 +103,9 @@ export default function RootLayout({
           aria-hidden="true"
         />
         <div className="relative z-10">
-          {children}
+          <SupabaseProvider>
+            {children}
+          </SupabaseProvider>
         </div>
       </body>
     </html>

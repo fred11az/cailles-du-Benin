@@ -1524,6 +1524,7 @@ function ProfessionnelsTab() {
   const updateProfessionalPricing = useStore((state) => state.updateProfessionalPricing)
 
   const [editingId, setEditingId] = useState<ProfessionalCategory | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [editForm, setEditForm] = useState({
     pricePerTray: 0,
     minQuantity: 10,
@@ -1550,15 +1551,35 @@ function ProfessionnelsTab() {
     })
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (editingId) {
-      updateProfessionalPricing(editingId, {
+      setIsSaving(true)
+      const updates = {
         pricePerTray: editForm.pricePerTray || null,
         minQuantity: editForm.minQuantity,
         description: editForm.description,
         hasBranding: editForm.hasBranding,
         isActive: editForm.isActive,
-      })
+      }
+
+      // Mettre à jour localement
+      updateProfessionalPricing(editingId, updates)
+
+      // Synchroniser avec Supabase
+      try {
+        const { updateProfessionalPricing: updateDb } = await import('@/lib/supabase')
+        await updateDb(editingId, {
+          price_per_tray: updates.pricePerTray,
+          min_quantity: updates.minQuantity,
+          description: updates.description,
+          has_tray: updates.hasBranding,
+          is_active: updates.isActive,
+        })
+      } catch (err) {
+        console.log('Mode local uniquement')
+      }
+
+      setIsSaving(false)
       setEditingId(null)
     }
   }
@@ -1666,11 +1687,11 @@ function ProfessionnelsTab() {
                     </label>
                   </div>
                   <div className="flex space-x-2">
-                    <button onClick={handleSave} className="btn-primary flex-1">
+                    <button onClick={handleSave} disabled={isSaving} className="btn-primary flex-1">
                       <Save className="w-4 h-4 inline mr-2" />
-                      Sauvegarder
+                      {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
                     </button>
-                    <button onClick={() => setEditingId(null)} className="btn-outline flex-1">
+                    <button onClick={() => setEditingId(null)} disabled={isSaving} className="btn-outline flex-1">
                       Annuler
                     </button>
                   </div>

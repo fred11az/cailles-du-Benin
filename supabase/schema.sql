@@ -94,17 +94,63 @@ CREATE TRIGGER update_orders_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+-- Table des tarifs professionnels
+CREATE TABLE IF NOT EXISTS professional_pricing (
+  id VARCHAR(50) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  price_per_tray INTEGER,
+  min_quantity INTEGER DEFAULT 10,
+  has_tray BOOLEAN DEFAULT false,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Insertion des données initiales - Tarifs professionnels
+INSERT INTO professional_pricing (id, name, description, price_per_tray, min_quantity, has_tray, is_active) VALUES
+  ('restaurants', 'Restaurants', '800F sans plateau - Contactez-nous sur WhatsApp', 800, 10, false, true),
+  ('supermarches', 'Supermarchés', '900F avec plateau - Branding personnalisé disponible sur WhatsApp', 900, 10, true, true),
+  ('evenements', 'Événements', '800F sans plateau - Mariages, séminaires, fêtes...', 800, 10, false, true),
+  ('revendeurs', 'Revendeurs', '900F avec plateau - Partenariat pour la revente', 900, 10, true, true)
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name,
+  description = EXCLUDED.description,
+  price_per_tray = EXCLUDED.price_per_tray,
+  min_quantity = EXCLUDED.min_quantity,
+  has_tray = EXCLUDED.has_tray,
+  is_active = EXCLUDED.is_active;
+
+-- Trigger pour updated_at sur professional_pricing
+DROP TRIGGER IF EXISTS update_professional_pricing_updated_at ON professional_pricing;
+CREATE TRIGGER update_professional_pricing_updated_at
+  BEFORE UPDATE ON professional_pricing
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- Activer Row Level Security (RLS)
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE delivery_zones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE professional_pricing ENABLE ROW LEVEL SECURITY;
 
 -- Policies pour lecture publique des produits et zones
 CREATE POLICY "Produits visibles par tous" ON products FOR SELECT USING (true);
 CREATE POLICY "Zones visibles par tous" ON delivery_zones FOR SELECT USING (true);
+CREATE POLICY "Tarifs pro visibles par tous" ON professional_pricing FOR SELECT USING (true);
 
 -- Policy pour création de commandes par tous
 CREATE POLICY "Créer commandes" ON orders FOR INSERT WITH CHECK (true);
 
 -- Policy pour lecture des commandes (pour l'admin)
 CREATE POLICY "Lecture commandes" ON orders FOR SELECT USING (true);
+
+-- Policies pour mise à jour admin (avec anon key pour simplifier)
+CREATE POLICY "Update products" ON products FOR UPDATE USING (true);
+CREATE POLICY "Update zones" ON delivery_zones FOR UPDATE USING (true);
+CREATE POLICY "Update orders" ON orders FOR UPDATE USING (true);
+CREATE POLICY "Update professional_pricing" ON professional_pricing FOR UPDATE USING (true);
+CREATE POLICY "Insert products" ON products FOR INSERT WITH CHECK (true);
+CREATE POLICY "Insert zones" ON delivery_zones FOR INSERT WITH CHECK (true);
+CREATE POLICY "Delete products" ON products FOR DELETE USING (true);
+CREATE POLICY "Delete zones" ON delivery_zones FOR DELETE USING (true);
