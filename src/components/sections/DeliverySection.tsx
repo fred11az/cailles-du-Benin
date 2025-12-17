@@ -20,7 +20,7 @@ export default function DeliverySection() {
           sizes="100vw"
         />
         {/* Overlay for readability */}
-        <div className="absolute inset-0 bg-white/85" />
+        <div className="absolute inset-0 bg-white/70" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

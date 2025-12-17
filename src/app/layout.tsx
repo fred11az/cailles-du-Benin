@@ -92,13 +92,13 @@ export default function RootLayout({
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            opacity: 0.25,
+            opacity: 0.35,
           }}
           aria-hidden="true"
         />
         {/* Semi-transparent overlay for text readability */}
         <div
-          className="fixed inset-0 z-0 pointer-events-none bg-white/70"
+          className="fixed inset-0 z-0 pointer-events-none bg-white/50"
           aria-hidden="true"
         />
         <div className="relative z-10">
