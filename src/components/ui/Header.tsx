@@ -14,7 +14,7 @@ export default function Header() {
   const itemsCount = getCartItemsCount()
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="bg-white/30 backdrop-blur-sm z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
@@ -29,8 +29,8 @@ export default function Header() {
               />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg md:text-xl font-bold text-gray-900">Mahutin Ferme</h1>
-              <p className="text-xs text-primary font-medium">Agro-Pastorale</p>
+              <h1 className="text-lg md:text-xl font-bold text-gray-800 drop-shadow-sm">Mahutin Ferme</h1>
+              <p className="text-xs text-primary font-medium drop-shadow-sm">Agro-Pastorale</p>
             </div>
           </Link>
 
@@ -84,7 +84,7 @@ export default function Header() {
 
       {/* Menu Mobile */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t">
+        <div className="md:hidden bg-white/80 backdrop-blur-sm border-t border-white/50">
           <nav className="px-4 py-4 space-y-4">
             <Link
               href="/"
