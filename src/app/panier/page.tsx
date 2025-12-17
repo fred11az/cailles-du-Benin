@@ -39,7 +39,7 @@ export default function CartPage() {
 
   if (!mounted) {
     return (
-      <main className="min-h-screen bg-surface">
+      <main className="min-h-screen">
         <Header />
         <div className="max-w-4xl mx-auto px-4 py-12">
           <div className="animate-pulse space-y-4">
@@ -67,7 +67,7 @@ export default function CartPage() {
     if (!formData.phone.trim()) {
       newErrors.phone = 'Le téléphone est requis'
     } else if (!validateBeninPhone(formData.phone)) {
-      newErrors.phone = 'Numéro de téléphone invalide (format: 8 chiffres)'
+      newErrors.phone = 'Numéro de téléphone invalide (format: 01XXXXXXXX - 10 chiffres)'
     }
 
     if (!formData.address.trim()) {
@@ -118,7 +118,7 @@ export default function CartPage() {
 
   if (orderSuccess) {
     return (
-      <main className="min-h-screen bg-surface">
+      <main className="min-h-screen">
         <Header />
         <div className="max-w-2xl mx-auto px-4 py-12 md:py-20">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -147,7 +147,7 @@ export default function CartPage() {
 
   if (cart.length === 0) {
     return (
-      <main className="min-h-screen bg-surface">
+      <main className="min-h-screen">
         <Header />
         <div className="max-w-2xl mx-auto px-4 py-12 md:py-20">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -171,7 +171,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-surface">
+    <main className="min-h-screen">
       <Header />
 
       <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
@@ -296,7 +296,7 @@ export default function CartPage() {
                       setFormData({ ...formData, phone: e.target.value })
                     }
                     className={`input-field ${errors.phone ? 'border-red-500' : ''}`}
-                    placeholder="Ex: 97000000"
+                    placeholder="Ex: 0197000000"
                   />
                   {errors.phone && (
                     <p className="text-red-500 text-sm mt-1">{errors.phone}</p>

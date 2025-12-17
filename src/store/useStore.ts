@@ -52,7 +52,9 @@ interface StoreState {
   // Produits
   products: Product[]
   setProducts: (products: Product[]) => void
+  addProduct: (product: Product) => void
   updateProduct: (id: string, updates: Partial<Product>) => void
+  deleteProduct: (id: string) => void
 
   // Panier
   cart: CartItem[]
@@ -107,11 +109,17 @@ export const useStore = create<StoreState>()(
       // Produits
       products: initialProducts,
       setProducts: (products) => set({ products }),
+      addProduct: (product) =>
+        set((state) => ({ products: [...state.products, product] })),
       updateProduct: (id, updates) =>
         set((state) => ({
           products: state.products.map((p) =>
             p.id === id ? { ...p, ...updates } : p
           ),
+        })),
+      deleteProduct: (id) =>
+        set((state) => ({
+          products: state.products.filter((p) => p.id !== id),
         })),
 
       // Panier
@@ -322,9 +330,10 @@ export function formatPrice(price: number): string {
 
 // Fonction pour valider le numéro de téléphone béninois
 export function validateBeninPhone(phone: string): boolean {
-  // Format béninois: 8 chiffres commençant par 9, 6, ou 5
+  // Format béninois: 10 chiffres commençant par 01
   const cleanPhone = phone.replace(/\s/g, '')
-  const beninPhoneRegex = /^(\+229)?[0-9]{8}$/
+  // Accepte: 01XXXXXXXX ou +22901XXXXXXXX
+  const beninPhoneRegex = /^(\+229)?01[0-9]{8}$/
   return beninPhoneRegex.test(cleanPhone)
 }
 

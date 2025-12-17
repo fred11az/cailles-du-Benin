@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useStore } from '@/store/useStore'
 import ProductCard from '@/components/ui/ProductCard'
 
@@ -7,8 +8,21 @@ export default function ProductsSection() {
   const products = useStore((state) => state.products)
 
   return (
-    <section id="produits" className="py-16 md:py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="produits" className="relative py-16 md:py-24 overflow-hidden">
+      {/* Background image */}
+      <div className="absolute inset-0">
+        <Image
+          src="/images/quails-bg.jpg"
+          alt="Fond cailles"
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        {/* Overlay for readability */}
+        <div className="absolute inset-0 bg-white/70" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* En-tête de section */}
         <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
           <span className="inline-block bg-primary/10 text-primary px-4 py-1 rounded-full text-sm font-medium mb-4">
@@ -39,10 +53,12 @@ export default function ProductsSection() {
             Pour les restaurants, hôtels et événements, contactez-nous pour des prix spéciaux.
           </p>
           <a
-            href="tel:+22900000000"
+            href="https://wa.me/message/4XXFMW6USOKRK1"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center justify-center bg-white text-primary font-semibold py-3 px-6 rounded-xl hover:bg-gray-100 transition-colors"
           >
-            Contactez-nous
+            Contactez-nous sur WhatsApp
           </a>
         </div>
       </div>

@@ -14,7 +14,7 @@ export default function Header() {
   const itemsCount = getCartItemsCount()
 
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-50">
+    <header className="bg-white/30 backdrop-blur-sm z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
@@ -29,8 +29,8 @@ export default function Header() {
               />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg md:text-xl font-bold text-gray-900">Mahutin Ferme</h1>
-              <p className="text-xs text-primary font-medium">Agro-Pastorale</p>
+              <h1 className="text-lg md:text-xl font-bold text-gray-800 drop-shadow-sm">Mahutin Ferme</h1>
+              <p className="text-xs text-primary font-medium drop-shadow-sm">Agro-Pastorale</p>
             </div>
           </Link>
 
@@ -49,13 +49,15 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            {/* Téléphone */}
+            {/* WhatsApp */}
             <a
-              href="tel:+22900000000"
-              className="hidden sm:flex items-center space-x-2 text-primary hover:text-primary-dark transition-colors"
+              href="https://wa.me/message/4XXFMW6USOKRK1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center space-x-2 text-green-600 hover:text-green-700 transition-colors"
             >
               <Phone className="w-5 h-5" />
-              <span className="font-medium">Commander</span>
+              <span className="font-medium">WhatsApp</span>
             </a>
 
             {/* Panier */}
@@ -84,7 +86,7 @@ export default function Header() {
 
       {/* Menu Mobile */}
       {isMenuOpen && (
-        <div className="md:hidden bg-white border-t">
+        <div className="md:hidden bg-white/80 backdrop-blur-sm border-t border-white/50">
           <nav className="px-4 py-4 space-y-4">
             <Link
               href="/"
@@ -108,11 +110,13 @@ export default function Header() {
               Contact
             </Link>
             <a
-              href="tel:+22900000000"
-              className="flex items-center space-x-2 text-primary font-medium pt-4 border-t"
+              href="https://wa.me/message/4XXFMW6USOKRK1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 text-green-600 font-medium pt-4 border-t"
             >
               <Phone className="w-5 h-5" />
-              <span>Appeler pour commander</span>
+              <span>Commander sur WhatsApp</span>
             </a>
           </nav>
         </div>

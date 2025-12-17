@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter } from 'lucide-react'
+import { Phone, Mail, MapPin, Facebook, Instagram, MessageCircle } from 'lucide-react'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -64,23 +64,35 @@ export default function Footer() {
             <h4 className="font-semibold text-lg mb-4">Contact</h4>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <Phone className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <MessageCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <a href="tel:+22900000000" className="text-gray-400 hover:text-primary transition-colors">
-                    +229 00 00 00 00
+                  <a
+                    href="https://wa.me/message/4XXFMW6USOKRK1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-400 hover:text-green-500 transition-colors"
+                  >
+                    WhatsApp
                   </a>
                 </div>
               </li>
               <li className="flex items-start space-x-3">
                 <Mail className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <a href="mailto:contact@cailledubenin.com" className="text-gray-400 hover:text-primary transition-colors">
-                  contact@cailledubenin.com
+                <a href="mailto:fermemahutin@gmail.com" className="text-gray-400 hover:text-primary transition-colors">
+                  fermemahutin@gmail.com
+                </a>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Phone className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <a href="tel:+2290198713324" className="text-gray-400 hover:text-primary transition-colors">
+                  +229 01 98 71 33 24
                 </a>
               </li>
               <li className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-gray-400">
-                  Cotonou, Bénin
+                  Abomey-Calavi, Houeto Pylônes<br />
+                  à 200m du carrefour, Bénin
                 </span>
               </li>
             </ul>
@@ -90,6 +102,15 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-lg mb-4">Suivez-nous</h4>
             <div className="flex space-x-4">
+              <a
+                href="https://wa.me/message/4XXFMW6USOKRK1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center hover:bg-green-500 transition-colors"
+                title="WhatsApp"
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
               <a
                 href="#"
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary transition-colors"
@@ -101,12 +122,6 @@ export default function Footer() {
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary transition-colors"
               >
                 <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-primary transition-colors"
-              >
-                <Twitter className="w-5 h-5" />
               </a>
             </div>
             <p className="text-gray-400 text-sm mt-4">
