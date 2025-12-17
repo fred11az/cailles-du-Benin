@@ -1651,7 +1651,7 @@ function ProfessionnelsTab() {
                         onChange={(e) => setEditForm({ ...editForm, hasBranding: e.target.checked })}
                         className="w-4 h-4 text-primary rounded"
                       />
-                      <span className="text-sm text-gray-700">Branding personnalisé inclus</span>
+                      <span className="text-sm text-gray-700">Avec plateau (emballage inclus)</span>
                     </label>
                   </div>
                   <div className="flex items-center space-x-4">
@@ -1692,11 +1692,13 @@ function ProfessionnelsTab() {
                   </div>
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <span>Min: {pricing.minQuantity} plateaux</span>
-                    {pricing.hasBranding && (
-                      <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs">
-                        + Branding
-                      </span>
-                    )}
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      pricing.hasBranding
+                        ? 'bg-primary/10 text-primary'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {pricing.hasBranding ? 'Avec plateau' : 'Sans plateau'}
+                    </span>
                   </div>
                   <button
                     onClick={() => handleEdit(pricing)}
@@ -1722,7 +1724,7 @@ function ProfessionnelsTab() {
                 <th className="text-left p-3 font-medium text-gray-600">Catégorie</th>
                 <th className="text-left p-3 font-medium text-gray-600">Prix/plateau</th>
                 <th className="text-left p-3 font-medium text-gray-600">Min.</th>
-                <th className="text-left p-3 font-medium text-gray-600">Branding</th>
+                <th className="text-left p-3 font-medium text-gray-600">Emballage</th>
                 <th className="text-left p-3 font-medium text-gray-600">Statut</th>
               </tr>
             </thead>
@@ -1736,9 +1738,9 @@ function ProfessionnelsTab() {
                   <td className="p-3">{pricing.minQuantity} plateaux</td>
                   <td className="p-3">
                     {pricing.hasBranding ? (
-                      <span className="text-green-600">Oui</span>
+                      <span className="text-green-600">Avec plateau</span>
                     ) : (
-                      <span className="text-gray-400">Non</span>
+                      <span className="text-gray-500">Sans plateau</span>
                     )}
                   </td>
                   <td className="p-3">

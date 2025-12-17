@@ -53,34 +53,34 @@ const initialProfessionalPricing: ProfessionalPricing[] = [
   {
     id: 'restaurants',
     name: 'Restaurants',
-    description: 'Prix préférentiel pour les restaurants',
+    description: '800F sans plateau - Contactez-nous sur WhatsApp',
     pricePerTray: 800,
     minQuantity: 10,
-    hasBranding: false,
+    hasBranding: false, // sans plateau
     isActive: true,
   },
   {
     id: 'supermarches',
     name: 'Supermarchés',
-    description: 'Offre spéciale avec branding personnalisé',
+    description: '900F avec plateau - Branding personnalisé disponible sur WhatsApp',
     pricePerTray: 900,
     minQuantity: 10,
-    hasBranding: true,
+    hasBranding: true, // avec plateau
     isActive: true,
   },
   {
     id: 'evenements',
     name: 'Événements',
-    description: 'Mariages, séminaires, fêtes...',
+    description: '800F sans plateau - Mariages, séminaires, fêtes...',
     pricePerTray: 800,
     minQuantity: 10,
-    hasBranding: false,
+    hasBranding: false, // sans plateau
     isActive: true,
   },
   {
     id: 'revendeurs',
     name: 'Revendeurs',
-    description: 'Partenariat pour la revente',
+    description: 'Partenariat pour la revente - Contactez-nous',
     pricePerTray: null, // Sur devis
     minQuantity: 10,
     hasBranding: false,

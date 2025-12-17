@@ -166,11 +166,13 @@ export default function ProfessionnelsPage() {
                     <p className="text-sm text-gray-500">Contactez-nous</p>
                   </div>
                 )}
-                {currentPricing.hasBranding && (
-                  <div className="bg-primary/10 text-primary px-3 py-2 rounded-lg text-sm font-medium">
-                    Branding personnalisé inclus
-                  </div>
-                )}
+                <div className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                  currentPricing.hasBranding
+                    ? 'bg-primary/10 text-primary'
+                    : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {currentPricing.hasBranding ? 'Avec plateau' : 'Sans plateau'}
+                </div>
               </div>
             </div>
           </div>
