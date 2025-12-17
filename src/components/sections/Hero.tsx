@@ -46,8 +46,13 @@ export default function Hero() {
                 <span>Voir nos produits</span>
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <a href="tel:+22900000000" className="bg-white/20 backdrop-blur-sm border-2 border-white text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:bg-white hover:text-gray-900 inline-flex items-center justify-center">
-                Commander par téléphone
+              <a
+                href="https://wa.me/message/4XXFMW6USOKRK1"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-600/90 backdrop-blur-sm border-2 border-green-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:bg-green-500 inline-flex items-center justify-center"
+              >
+                Commander sur WhatsApp
               </a>
             </div>
 

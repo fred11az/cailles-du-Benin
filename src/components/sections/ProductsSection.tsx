@@ -53,10 +53,12 @@ export default function ProductsSection() {
             Pour les restaurants, hôtels et événements, contactez-nous pour des prix spéciaux.
           </p>
           <a
-            href="tel:+22900000000"
+            href="https://wa.me/message/4XXFMW6USOKRK1"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center justify-center bg-white text-primary font-semibold py-3 px-6 rounded-xl hover:bg-gray-100 transition-colors"
           >
-            Contactez-nous
+            Contactez-nous sur WhatsApp
           </a>
         </div>
       </div>

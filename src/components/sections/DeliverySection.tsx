@@ -80,8 +80,13 @@ export default function DeliverySection() {
         <div className="mt-12 text-center">
           <p className="text-gray-600 text-sm">
             Votre zone n&apos;est pas listée ?{' '}
-            <a href="tel:+22900000000" className="text-primary font-medium hover:underline">
-              Contactez-nous
+            <a
+              href="https://wa.me/message/4XXFMW6USOKRK1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-600 font-medium hover:underline"
+            >
+              Contactez-nous sur WhatsApp
             </a>{' '}
             pour un devis personnalisé.
           </p>

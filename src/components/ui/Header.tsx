@@ -49,13 +49,15 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
-            {/* Téléphone */}
+            {/* WhatsApp */}
             <a
-              href="tel:+22900000000"
-              className="hidden sm:flex items-center space-x-2 text-primary hover:text-primary-dark transition-colors"
+              href="https://wa.me/message/4XXFMW6USOKRK1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex items-center space-x-2 text-green-600 hover:text-green-700 transition-colors"
             >
               <Phone className="w-5 h-5" />
-              <span className="font-medium">Commander</span>
+              <span className="font-medium">WhatsApp</span>
             </a>
 
             {/* Panier */}
@@ -108,11 +110,13 @@ export default function Header() {
               Contact
             </Link>
             <a
-              href="tel:+22900000000"
-              className="flex items-center space-x-2 text-primary font-medium pt-4 border-t"
+              href="https://wa.me/message/4XXFMW6USOKRK1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 text-green-600 font-medium pt-4 border-t"
             >
               <Phone className="w-5 h-5" />
-              <span>Appeler pour commander</span>
+              <span>Commander sur WhatsApp</span>
             </a>
           </nav>
         </div>
