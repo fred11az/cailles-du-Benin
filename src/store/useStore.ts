@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Product, CartItem, DeliveryZone, Order, AdminSession, Expense, ProductionStats, DailyProduction } from '@/types'
+import type { Product, CartItem, DeliveryZone, Order, AdminSession, Expense, ProductionStats, DailyProduction, ProfessionalPricing, ProfessionalCategory } from '@/types'
 
 // Données initiales des produits
 const initialProducts: Product[] = [
@@ -47,6 +47,46 @@ const initialProductionStats: ProductionStats = {
   totalMeatInStock: 50,
   lastUpdated: new Date().toISOString(),
 }
+
+// Données initiales des tarifs professionnels
+const initialProfessionalPricing: ProfessionalPricing[] = [
+  {
+    id: 'restaurants',
+    name: 'Restaurants',
+    description: '800F sans plateau - Contactez-nous sur WhatsApp',
+    pricePerTray: 800,
+    minQuantity: 10,
+    hasBranding: false, // sans plateau
+    isActive: true,
+  },
+  {
+    id: 'supermarches',
+    name: 'Supermarchés',
+    description: '900F avec plateau - Branding personnalisé disponible sur WhatsApp',
+    pricePerTray: 900,
+    minQuantity: 10,
+    hasBranding: true, // avec plateau
+    isActive: true,
+  },
+  {
+    id: 'evenements',
+    name: 'Événements',
+    description: '800F sans plateau - Mariages, séminaires, fêtes...',
+    pricePerTray: 800,
+    minQuantity: 10,
+    hasBranding: false, // sans plateau
+    isActive: true,
+  },
+  {
+    id: 'revendeurs',
+    name: 'Revendeurs',
+    description: '900F avec plateau - Partenariat pour la revente',
+    pricePerTray: 900,
+    minQuantity: 10,
+    hasBranding: true, // avec plateau
+    isActive: true,
+  },
+]
 
 interface StoreState {
   // Produits
@@ -101,6 +141,10 @@ interface StoreState {
   addDailyProduction: (production: DailyProduction) => void
   collectEggs: (quantity: number) => void
   processQuails: (quantity: number, meatKg: number) => void
+
+  // Tarifs professionnels
+  professionalPricing: ProfessionalPricing[]
+  updateProfessionalPricing: (id: ProfessionalCategory, updates: Partial<ProfessionalPricing>) => void
 }
 
 export const useStore = create<StoreState>()(
@@ -296,6 +340,15 @@ export const useStore = create<StoreState>()(
             lastUpdated: new Date().toISOString(),
           },
         })),
+
+      // Tarifs professionnels
+      professionalPricing: initialProfessionalPricing,
+      updateProfessionalPricing: (id, updates) =>
+        set((state) => ({
+          professionalPricing: state.professionalPricing.map((p) =>
+            p.id === id ? { ...p, ...updates } : p
+          ),
+        })),
     }),
     {
       name: 'mahutin-ferme-store',
@@ -308,6 +361,7 @@ export const useStore = create<StoreState>()(
         expenses: state.expenses,
         productionStats: state.productionStats,
         dailyProductions: state.dailyProductions,
+        professionalPricing: state.professionalPricing,
       }),
     }
   )

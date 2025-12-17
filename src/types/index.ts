@@ -115,3 +115,23 @@ export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
   { value: 'eau', label: 'Eau' },
   { value: 'autre', label: 'Autre' },
 ];
+
+// Types pour les tarifs professionnels (commandes en gros)
+export type ProfessionalCategory = 'restaurants' | 'supermarches' | 'evenements' | 'revendeurs';
+
+export interface ProfessionalPricing {
+  id: ProfessionalCategory;
+  name: string;
+  description: string;
+  pricePerTray: number | null; // Prix par plateau, null si sur devis
+  minQuantity: number; // Quantité minimale de plateaux
+  hasBranding: boolean; // Si le branding personnalisé est inclus
+  isActive: boolean;
+}
+
+export const PROFESSIONAL_CATEGORIES: { value: ProfessionalCategory; label: string; icon: string }[] = [
+  { value: 'restaurants', label: 'Restaurants', icon: 'UtensilsCrossed' },
+  { value: 'supermarches', label: 'Supermarchés', icon: 'Store' },
+  { value: 'evenements', label: 'Événements', icon: 'Calendar' },
+  { value: 'revendeurs', label: 'Revendeurs', icon: 'Users' },
+];
