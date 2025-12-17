@@ -134,6 +134,21 @@ ALTER TABLE delivery_zones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE professional_pricing ENABLE ROW LEVEL SECURITY;
 
+-- Supprimer les policies existantes avant de les recréer
+DROP POLICY IF EXISTS "Produits visibles par tous" ON products;
+DROP POLICY IF EXISTS "Zones visibles par tous" ON delivery_zones;
+DROP POLICY IF EXISTS "Tarifs pro visibles par tous" ON professional_pricing;
+DROP POLICY IF EXISTS "Créer commandes" ON orders;
+DROP POLICY IF EXISTS "Lecture commandes" ON orders;
+DROP POLICY IF EXISTS "Update products" ON products;
+DROP POLICY IF EXISTS "Update zones" ON delivery_zones;
+DROP POLICY IF EXISTS "Update orders" ON orders;
+DROP POLICY IF EXISTS "Update professional_pricing" ON professional_pricing;
+DROP POLICY IF EXISTS "Insert products" ON products;
+DROP POLICY IF EXISTS "Insert zones" ON delivery_zones;
+DROP POLICY IF EXISTS "Delete products" ON products;
+DROP POLICY IF EXISTS "Delete zones" ON delivery_zones;
+
 -- Policies pour lecture publique des produits et zones
 CREATE POLICY "Produits visibles par tous" ON products FOR SELECT USING (true);
 CREATE POLICY "Zones visibles par tous" ON delivery_zones FOR SELECT USING (true);
