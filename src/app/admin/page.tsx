@@ -763,45 +763,50 @@ function ProductionTab() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Total cailles</label>
                 <input
                   type="number"
-                  value={editStats.totalQuails}
-                  onChange={(e) => setEditStats({ ...editStats, totalQuails: Number(e.target.value) })}
+                  value={editStats.totalQuails || ''}
+                  onChange={(e) => setEditStats({ ...editStats, totalQuails: e.target.value === '' ? 0 : Number(e.target.value) })}
                   className="input-field"
+                  placeholder="0"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Mâles</label>
                 <input
                   type="number"
-                  value={editStats.maleQuails}
-                  onChange={(e) => setEditStats({ ...editStats, maleQuails: Number(e.target.value) })}
+                  value={editStats.maleQuails || ''}
+                  onChange={(e) => setEditStats({ ...editStats, maleQuails: e.target.value === '' ? 0 : Number(e.target.value) })}
                   className="input-field"
+                  placeholder="0"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Femelles</label>
                 <input
                   type="number"
-                  value={editStats.femaleQuails}
-                  onChange={(e) => setEditStats({ ...editStats, femaleQuails: Number(e.target.value) })}
+                  value={editStats.femaleQuails || ''}
+                  onChange={(e) => setEditStats({ ...editStats, femaleQuails: e.target.value === '' ? 0 : Number(e.target.value) })}
                   className="input-field"
+                  placeholder="0"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Œufs en stock</label>
                 <input
                   type="number"
-                  value={editStats.totalEggsInStock}
-                  onChange={(e) => setEditStats({ ...editStats, totalEggsInStock: Number(e.target.value) })}
+                  value={editStats.totalEggsInStock || ''}
+                  onChange={(e) => setEditStats({ ...editStats, totalEggsInStock: e.target.value === '' ? 0 : Number(e.target.value) })}
                   className="input-field"
+                  placeholder="0"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Viande en stock (unités)</label>
                 <input
                   type="number"
-                  value={editStats.totalMeatInStock}
-                  onChange={(e) => setEditStats({ ...editStats, totalMeatInStock: Number(e.target.value) })}
+                  value={editStats.totalMeatInStock || ''}
+                  onChange={(e) => setEditStats({ ...editStats, totalMeatInStock: e.target.value === '' ? 0 : Number(e.target.value) })}
                   className="input-field"
+                  placeholder="0"
                 />
               </div>
             </div>
@@ -989,9 +994,10 @@ function ProductsTab() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Prix (FCFA)</label>
                   <input
                     type="number"
-                    value={editForm.price}
-                    onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
+                    value={editForm.price || ''}
+                    onChange={(e) => setEditForm({ ...editForm, price: e.target.value === '' ? 0 : Number(e.target.value) })}
                     className="input-field"
+                    placeholder="0"
                   />
                 </div>
                 <div>

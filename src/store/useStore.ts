@@ -322,9 +322,10 @@ export function formatPrice(price: number): string {
 
 // Fonction pour valider le numéro de téléphone béninois
 export function validateBeninPhone(phone: string): boolean {
-  // Format béninois: 8 chiffres commençant par 9, 6, ou 5
+  // Format béninois: 10 chiffres commençant par 01
   const cleanPhone = phone.replace(/\s/g, '')
-  const beninPhoneRegex = /^(\+229)?[0-9]{8}$/
+  // Accepte: 01XXXXXXXX ou +22901XXXXXXXX
+  const beninPhoneRegex = /^(\+229)?01[0-9]{8}$/
   return beninPhoneRegex.test(cleanPhone)
 }
 

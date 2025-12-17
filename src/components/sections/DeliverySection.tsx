@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { MapPin, Clock, Truck } from 'lucide-react'
 import { useStore, formatPrice } from '@/store/useStore'
 
@@ -8,8 +9,21 @@ export default function DeliverySection() {
   const activeZones = zones.filter((zone) => zone.isActive)
 
   return (
-    <section id="livraison" className="py-16 md:py-24 bg-surface">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="livraison" className="relative py-16 md:py-24 overflow-hidden">
+      {/* Background image */}
+      <div className="absolute inset-0">
+        <Image
+          src="/images/quails-bg.jpg"
+          alt="Fond cailles"
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        {/* Overlay for readability */}
+        <div className="absolute inset-0 bg-white/85" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* En-tête de section */}
         <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
           <span className="inline-block bg-primary/10 text-primary px-4 py-1 rounded-full text-sm font-medium mb-4">
