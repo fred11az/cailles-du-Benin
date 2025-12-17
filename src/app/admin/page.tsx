@@ -34,12 +34,15 @@ import {
   ImageIcon,
   Upload,
   Camera,
+  Users,
+  Store,
+  UtensilsCrossed,
 } from 'lucide-react'
 import { useStore, formatPrice, generateOrderNumber, formatDate } from '@/store/useStore'
-import type { Order, Product, DeliveryZone, Expense, ExpenseCategory } from '@/types'
-import { EXPENSE_CATEGORIES } from '@/types'
+import type { Order, Product, DeliveryZone, Expense, ExpenseCategory, ProfessionalCategory } from '@/types'
+import { EXPENSE_CATEGORIES, PROFESSIONAL_CATEGORIES } from '@/types'
 
-type TabType = 'dashboard' | 'orders' | 'products' | 'zones' | 'accounting' | 'production'
+type TabType = 'dashboard' | 'orders' | 'products' | 'zones' | 'accounting' | 'production' | 'professionnels'
 
 export default function AdminPage() {
   const router = useRouter()
@@ -108,6 +111,7 @@ export default function AdminPage() {
     { id: 'orders' as TabType, label: 'Commandes', icon: ShoppingCart },
     { id: 'products' as TabType, label: 'Produits', icon: Package },
     { id: 'zones' as TabType, label: 'Zones livraison', icon: MapPin },
+    { id: 'professionnels' as TabType, label: 'Professionnels', icon: Users },
     { id: 'accounting' as TabType, label: 'Comptabilité', icon: PiggyBank },
     { id: 'production' as TabType, label: 'Production', icon: Bird },
   ]
@@ -230,6 +234,7 @@ export default function AdminPage() {
           {activeTab === 'orders' && <OrdersTab />}
           {activeTab === 'products' && <ProductsTab />}
           {activeTab === 'zones' && <ZonesTab />}
+          {activeTab === 'professionnels' && <ProfessionnelsTab />}
           {activeTab === 'accounting' && <AccountingTab />}
           {activeTab === 'production' && <ProductionTab />}
         </div>
@@ -1508,6 +1513,246 @@ function ZonesTab() {
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  )
+}
+
+// Professionnels Tab - Gestion des tarifs professionnels
+function ProfessionnelsTab() {
+  const professionalPricing = useStore((state) => state.professionalPricing)
+  const updateProfessionalPricing = useStore((state) => state.updateProfessionalPricing)
+
+  const [editingId, setEditingId] = useState<ProfessionalCategory | null>(null)
+  const [editForm, setEditForm] = useState({
+    pricePerTray: 0,
+    minQuantity: 10,
+    description: '',
+    hasBranding: false,
+    isActive: true,
+  })
+
+  const categoryIcons: Record<ProfessionalCategory, React.ElementType> = {
+    restaurants: UtensilsCrossed,
+    supermarches: Store,
+    evenements: Calendar,
+    revendeurs: Users,
+  }
+
+  const handleEdit = (pricing: typeof professionalPricing[0]) => {
+    setEditingId(pricing.id)
+    setEditForm({
+      pricePerTray: pricing.pricePerTray || 0,
+      minQuantity: pricing.minQuantity,
+      description: pricing.description,
+      hasBranding: pricing.hasBranding,
+      isActive: pricing.isActive,
+    })
+  }
+
+  const handleSave = () => {
+    if (editingId) {
+      updateProfessionalPricing(editingId, {
+        pricePerTray: editForm.pricePerTray || null,
+        minQuantity: editForm.minQuantity,
+        description: editForm.description,
+        hasBranding: editForm.hasBranding,
+        isActive: editForm.isActive,
+      })
+      setEditingId(null)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 hidden lg:block">Tarifs Professionnels</h2>
+      </div>
+
+      {/* Info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <p className="text-blue-800 text-sm">
+          <strong>Note :</strong> Ces tarifs s&apos;appliquent sur la page professionnels pour les commandes en gros (minimum 10 plateaux).
+          Le prix normal d&apos;un plateau d&apos;œufs est de <strong>1 000 FCFA</strong>.
+        </p>
+      </div>
+
+      {/* Grille des catégories */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {professionalPricing.map((pricing) => {
+          const IconComponent = categoryIcons[pricing.id]
+          const isEditing = editingId === pricing.id
+
+          return (
+            <div
+              key={pricing.id}
+              className={`bg-white rounded-2xl shadow-lg p-6 ${!pricing.isActive ? 'opacity-60' : ''}`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    pricing.isActive ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    <IconComponent className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg">{pricing.name}</h3>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      pricing.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {pricing.isActive ? 'Actif' : 'Inactif'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {isEditing ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Prix par plateau (FCFA)
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.pricePerTray || ''}
+                      onChange={(e) => setEditForm({ ...editForm, pricePerTray: Number(e.target.value) || 0 })}
+                      className="input-field"
+                      placeholder="Laissez vide pour 'Sur devis'"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Laissez 0 pour afficher &quot;Sur devis&quot;</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Quantité minimum (plateaux)
+                    </label>
+                    <input
+                      type="number"
+                      value={editForm.minQuantity}
+                      onChange={(e) => setEditForm({ ...editForm, minQuantity: Number(e.target.value) })}
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.description}
+                      onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                      className="input-field"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={editForm.hasBranding}
+                        onChange={(e) => setEditForm({ ...editForm, hasBranding: e.target.checked })}
+                        className="w-4 h-4 text-primary rounded"
+                      />
+                      <span className="text-sm text-gray-700">Branding personnalisé inclus</span>
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={editForm.isActive}
+                        onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+                        className="w-4 h-4 text-primary rounded"
+                      />
+                      <span className="text-sm text-gray-700">Catégorie active</span>
+                    </label>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button onClick={handleSave} className="btn-primary flex-1">
+                      <Save className="w-4 h-4 inline mr-2" />
+                      Sauvegarder
+                    </button>
+                    <button onClick={() => setEditingId(null)} className="btn-outline flex-1">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-gray-600 text-sm">{pricing.description}</p>
+                  <div className="flex items-baseline space-x-2">
+                    {pricing.pricePerTray ? (
+                      <>
+                        <span className="text-2xl font-bold text-primary">
+                          {formatPrice(pricing.pricePerTray)}
+                        </span>
+                        <span className="text-gray-500 text-sm">/ plateau</span>
+                      </>
+                    ) : (
+                      <span className="text-xl font-bold text-gray-600">Sur devis</span>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <span>Min: {pricing.minQuantity} plateaux</span>
+                    {pricing.hasBranding && (
+                      <span className="bg-primary/10 text-primary px-2 py-1 rounded-full text-xs">
+                        + Branding
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleEdit(pricing)}
+                    className="btn-outline w-full mt-4"
+                  >
+                    <Edit2 className="w-4 h-4 inline mr-2" />
+                    Modifier
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Résumé */}
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <h3 className="font-bold text-gray-900 mb-4">Récapitulatif des tarifs</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left p-3 font-medium text-gray-600">Catégorie</th>
+                <th className="text-left p-3 font-medium text-gray-600">Prix/plateau</th>
+                <th className="text-left p-3 font-medium text-gray-600">Min.</th>
+                <th className="text-left p-3 font-medium text-gray-600">Branding</th>
+                <th className="text-left p-3 font-medium text-gray-600">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {professionalPricing.map((pricing) => (
+                <tr key={pricing.id} className="border-b">
+                  <td className="p-3 font-medium">{pricing.name}</td>
+                  <td className="p-3 text-primary font-semibold">
+                    {pricing.pricePerTray ? formatPrice(pricing.pricePerTray) : 'Sur devis'}
+                  </td>
+                  <td className="p-3">{pricing.minQuantity} plateaux</td>
+                  <td className="p-3">
+                    {pricing.hasBranding ? (
+                      <span className="text-green-600">Oui</span>
+                    ) : (
+                      <span className="text-gray-400">Non</span>
+                    )}
+                  </td>
+                  <td className="p-3">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      pricing.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {pricing.isActive ? 'Actif' : 'Inactif'}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

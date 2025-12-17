@@ -43,24 +43,6 @@ export default function ProductsSection() {
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
-
-        {/* Bannière info */}
-        <div className="mt-12 md:mt-16 bg-gradient-to-r from-primary to-primary-dark rounded-2xl p-6 md:p-8 text-white text-center">
-          <h3 className="text-xl md:text-2xl font-bold mb-2">
-            Commandes en gros disponibles
-          </h3>
-          <p className="text-white/90 mb-4">
-            Pour les restaurants, hôtels et événements, contactez-nous pour des prix spéciaux.
-          </p>
-          <a
-            href="https://wa.me/message/4XXFMW6USOKRK1"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center bg-white text-primary font-semibold py-3 px-6 rounded-xl hover:bg-gray-100 transition-colors"
-          >
-            Contactez-nous sur WhatsApp
-          </a>
-        </div>
       </div>
     </section>
   )
