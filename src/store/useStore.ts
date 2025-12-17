@@ -72,7 +72,7 @@ const initialProfessionalPricing: ProfessionalPricing[] = [
     id: 'evenements',
     name: 'Événements',
     description: 'Mariages, séminaires, fêtes...',
-    pricePerTray: null, // Sur devis
+    pricePerTray: 800,
     minQuantity: 10,
     hasBranding: false,
     isActive: true,
