@@ -951,9 +951,20 @@ function OrdersTab() {
 // Products Tab
 function ProductsTab() {
   const products = useStore((state) => state.products)
+  const addProduct = useStore((state) => state.addProduct)
   const updateProduct = useStore((state) => state.updateProduct)
+  const deleteProduct = useStore((state) => state.deleteProduct)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ price: 0, description: '' })
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    description: '',
+    price: 0,
+    unit: 'unité',
+    category: 'eggs' as 'eggs' | 'meat',
+    image: '/images/eggs.jpg',
+  })
 
   const handleEdit = (product: Product) => {
     setEditingId(product.id)
@@ -965,9 +976,112 @@ function ProductsTab() {
     setEditingId(null)
   }
 
+  const handleAddProduct = () => {
+    if (newProduct.name && newProduct.price > 0) {
+      addProduct({
+        id: crypto.randomUUID(),
+        ...newProduct,
+        stock: 100,
+        isAvailable: true,
+      })
+      setNewProduct({
+        name: '',
+        description: '',
+        price: 0,
+        unit: 'unité',
+        category: 'eggs',
+        image: '/images/eggs.jpg',
+      })
+      setShowAddForm(false)
+    }
+  }
+
+  const handleDelete = (id: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
+      deleteProduct(id)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 hidden lg:block">Gestion des Produits</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 hidden lg:block">Gestion des Produits</h2>
+        <button onClick={() => setShowAddForm(true)} className="btn-primary flex items-center space-x-2">
+          <Plus className="w-4 h-4" />
+          <span>Nouveau produit</span>
+        </button>
+      </div>
+
+      {/* Formulaire d'ajout */}
+      {showAddForm && (
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Nouveau produit</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nom du produit *</label>
+              <input
+                type="text"
+                value={newProduct.name}
+                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                className="input-field"
+                placeholder="Ex: Oeufs de caille - Plateau de 30"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie *</label>
+              <select
+                value={newProduct.category}
+                onChange={(e) => setNewProduct({
+                  ...newProduct,
+                  category: e.target.value as 'eggs' | 'meat',
+                  image: e.target.value === 'eggs' ? '/images/eggs.jpg' : '/images/meat.jpg'
+                })}
+                className="input-field"
+              >
+                <option value="eggs">Oeufs</option>
+                <option value="meat">Viande</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Prix (FCFA) *</label>
+              <input
+                type="number"
+                value={newProduct.price || ''}
+                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value === '' ? 0 : Number(e.target.value) })}
+                className="input-field"
+                placeholder="1000"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Unité *</label>
+              <input
+                type="text"
+                value={newProduct.unit}
+                onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
+                className="input-field"
+                placeholder="plateau, unité, kg..."
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                value={newProduct.description}
+                onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+                className="input-field min-h-[80px]"
+                placeholder="Description du produit..."
+              />
+            </div>
+          </div>
+          <div className="flex space-x-2 mt-4">
+            <button onClick={handleAddProduct} className="btn-primary">
+              Ajouter le produit
+            </button>
+            <button onClick={() => setShowAddForm(false)} className="btn-outline">
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {products.map((product) => (
@@ -986,6 +1100,13 @@ function ProductsTab() {
                   {product.category === 'eggs' ? 'Oeufs' : 'Viande'}
                 </span>
               </div>
+              <button
+                onClick={() => handleDelete(product.id)}
+                className="p-2 hover:bg-red-100 text-red-600 rounded-lg"
+                title="Supprimer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
 
             {editingId === product.id ? (
