@@ -80,10 +80,10 @@ const initialProfessionalPricing: ProfessionalPricing[] = [
   {
     id: 'revendeurs',
     name: 'Revendeurs',
-    description: 'Partenariat pour la revente - Contactez-nous',
-    pricePerTray: null, // Sur devis
+    description: '900F avec plateau - Partenariat pour la revente',
+    pricePerTray: 900,
     minQuantity: 10,
-    hasBranding: false,
+    hasBranding: true, // avec plateau
     isActive: true,
   },
 ]
