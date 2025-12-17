@@ -31,6 +31,9 @@ import {
   Scale,
   FileText,
   BarChart3,
+  ImageIcon,
+  Upload,
+  Camera,
 } from 'lucide-react'
 import { useStore, formatPrice, generateOrderNumber, formatDate } from '@/store/useStore'
 import type { Order, Product, DeliveryZone, Expense, ExpenseCategory } from '@/types'
@@ -955,8 +958,9 @@ function ProductsTab() {
   const updateProduct = useStore((state) => state.updateProduct)
   const deleteProduct = useStore((state) => state.deleteProduct)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ price: 0, description: '' })
+  const [editForm, setEditForm] = useState({ price: 0, description: '', image: '' })
   const [showAddForm, setShowAddForm] = useState(false)
+  const [showImageModal, setShowImageModal] = useState<string | null>(null)
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
@@ -966,9 +970,17 @@ function ProductsTab() {
     image: '/images/eggs.jpg',
   })
 
+  // Liste des images prédéfinies disponibles
+  const predefinedImages = [
+    { src: '/images/eggs.jpg', label: 'Oeufs de caille' },
+    { src: '/images/meat.jpg', label: 'Viande de caille' },
+    { src: '/images/quails-bg.jpg', label: 'Cailles' },
+    { src: '/images/hero-quail.jpg', label: 'Caille hero' },
+  ]
+
   const handleEdit = (product: Product) => {
     setEditingId(product.id)
-    setEditForm({ price: product.price, description: product.description })
+    setEditForm({ price: product.price, description: product.description, image: product.image })
   }
 
   const handleSave = (id: string) => {
@@ -1000,6 +1012,38 @@ function ProductsTab() {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
       deleteProduct(id)
     }
+  }
+
+  // Fonction pour gérer l'upload d'image (conversion en base64)
+  const handleImageUpload = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    target: 'new' | 'edit'
+  ) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Vérifier la taille du fichier (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('L\'image est trop grande. Taille maximum: 2 Mo')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64 = reader.result as string
+        if (target === 'new') {
+          setNewProduct({ ...newProduct, image: base64 })
+        } else {
+          setEditForm({ ...editForm, image: base64 })
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Fonction pour changer l'image d'un produit existant
+  const handleChangeProductImage = (productId: string, newImage: string) => {
+    updateProduct(productId, { image: newImage })
+    setShowImageModal(null)
   }
 
   return (
@@ -1071,6 +1115,53 @@ function ProductsTab() {
                 placeholder="Description du produit..."
               />
             </div>
+
+            {/* Section Image */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Image du produit</label>
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Aperçu de l'image */}
+                <div className="relative w-32 h-32 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                  <Image
+                    src={newProduct.image}
+                    alt="Aperçu"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="flex-1 space-y-3">
+                  {/* Bouton upload */}
+                  <label className="flex items-center justify-center space-x-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 rounded-xl cursor-pointer transition-colors">
+                    <Upload className="w-5 h-5 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">Télécharger une image</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, 'new')}
+                      className="hidden"
+                    />
+                  </label>
+                  {/* Sélection d'images prédéfinies */}
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">Ou choisir une image existante:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {predefinedImages.map((img) => (
+                        <button
+                          key={img.src}
+                          onClick={() => setNewProduct({ ...newProduct, image: img.src })}
+                          className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 transition-colors ${
+                            newProduct.image === img.src ? 'border-primary' : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          title={img.label}
+                        >
+                          <Image src={img.src} alt={img.label} fill className="object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="flex space-x-2 mt-4">
             <button onClick={handleAddProduct} className="btn-primary">
@@ -1087,8 +1178,18 @@ function ProductsTab() {
         {products.map((product) => (
           <div key={product.id} className="bg-white rounded-2xl shadow-lg p-6">
             <div className="flex items-start space-x-4">
-              <div className="relative w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                <Image src={product.image} alt={product.name} fill className="object-cover" />
+              {/* Image avec bouton de modification */}
+              <div className="relative group">
+                <div className="relative w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                  <Image src={product.image} alt={product.name} fill className="object-cover" />
+                </div>
+                <button
+                  onClick={() => setShowImageModal(product.id)}
+                  className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center"
+                  title="Modifier l'image"
+                >
+                  <Camera className="w-6 h-6 text-white" />
+                </button>
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900">{product.name}</h3>
@@ -1129,6 +1230,39 @@ function ProductsTab() {
                     className="input-field min-h-[80px]"
                   />
                 </div>
+                {/* Section modification image */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Image du produit</label>
+                  <div className="flex items-center space-x-3">
+                    <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+                      <Image src={editForm.image} alt="Aperçu" fill className="object-cover" />
+                    </div>
+                    <label className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors">
+                      <Upload className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm text-gray-700">Changer</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, 'edit')}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {predefinedImages.map((img) => (
+                      <button
+                        key={img.src}
+                        onClick={() => setEditForm({ ...editForm, image: img.src })}
+                        className={`relative w-10 h-10 rounded-lg overflow-hidden border-2 transition-colors ${
+                          editForm.image === img.src ? 'border-primary' : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        title={img.label}
+                      >
+                        <Image src={img.src} alt={img.label} fill className="object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex space-x-2">
                   <button onClick={() => handleSave(product.id)} className="btn-primary flex-1">
                     Sauvegarder
@@ -1153,6 +1287,124 @@ function ProductsTab() {
             )}
           </div>
         ))}
+      </div>
+
+      {/* Modal de modification d'image rapide */}
+      {showImageModal && (
+        <ImageChangeModal
+          productId={showImageModal}
+          currentImage={products.find(p => p.id === showImageModal)?.image || ''}
+          predefinedImages={predefinedImages}
+          onClose={() => setShowImageModal(null)}
+          onSelect={handleChangeProductImage}
+        />
+      )}
+    </div>
+  )
+}
+
+// Modal pour changer l'image d'un produit
+function ImageChangeModal({
+  productId,
+  currentImage,
+  predefinedImages,
+  onClose,
+  onSelect,
+}: {
+  productId: string
+  currentImage: string
+  predefinedImages: { src: string; label: string }[]
+  onClose: () => void
+  onSelect: (productId: string, image: string) => void
+}) {
+  const [selectedImage, setSelectedImage] = useState(currentImage)
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('L\'image est trop grande. Taille maximum: 2 Mo')
+        return
+      }
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setSelectedImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-auto">
+        <div className="p-6 border-b flex items-center justify-between">
+          <h3 className="text-xl font-bold flex items-center space-x-2">
+            <ImageIcon className="w-6 h-6" />
+            <span>Modifier l&apos;image</span>
+          </h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="p-6 space-y-6">
+          {/* Aperçu de l'image sélectionnée */}
+          <div className="flex justify-center">
+            <div className="relative w-40 h-40 bg-gray-100 rounded-2xl overflow-hidden">
+              <Image src={selectedImage} alt="Aperçu" fill className="object-cover" />
+            </div>
+          </div>
+
+          {/* Upload personnalisé */}
+          <label className="flex items-center justify-center space-x-3 px-4 py-4 bg-gray-50 hover:bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer transition-colors">
+            <Upload className="w-6 h-6 text-gray-500" />
+            <div className="text-center">
+              <span className="font-medium text-gray-700">Télécharger une nouvelle image</span>
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG jusqu&apos;à 2 Mo</p>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
+
+          {/* Images prédéfinies */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-3">Ou choisir parmi les images existantes:</p>
+            <div className="grid grid-cols-4 gap-3">
+              {predefinedImages.map((img) => (
+                <button
+                  key={img.src}
+                  onClick={() => setSelectedImage(img.src)}
+                  className={`relative aspect-square rounded-xl overflow-hidden border-3 transition-all ${
+                    selectedImage === img.src
+                      ? 'border-primary ring-2 ring-primary/30'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                  title={img.label}
+                >
+                  <Image src={img.src} alt={img.label} fill className="object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Boutons d'action */}
+          <div className="flex space-x-3 pt-4">
+            <button
+              onClick={() => onSelect(productId, selectedImage)}
+              className="btn-primary flex-1"
+            >
+              <Save className="w-4 h-4 inline mr-2" />
+              Enregistrer
+            </button>
+            <button onClick={onClose} className="btn-outline flex-1">
+              Annuler
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   )
