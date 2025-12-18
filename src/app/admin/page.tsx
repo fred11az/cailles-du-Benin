@@ -1573,24 +1573,33 @@ function ZonesTab() {
   const addZone = useStore((state) => state.addZone)
   const updateZone = useStore((state) => state.updateZone)
   const deleteZone = useStore((state) => state.deleteZone)
-  const { syncZone } = useSyncToSupabase()
+  const { syncZone, addZoneToDb, removeZoneFromDb } = useSyncToSupabase()
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [newZone, setNewZone] = useState({ name: '', price: 0, estimatedTime: '' })
   const [editForm, setEditForm] = useState({ name: '', price: 0, estimatedTime: '' })
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (newZone.name && newZone.price > 0) {
-      addZone({
+      const zone = {
         id: crypto.randomUUID(),
         name: newZone.name,
         price: newZone.price,
         estimatedTime: newZone.estimatedTime || '2-3 heures',
         isActive: true,
-      })
+      }
+      addZone(zone)
+      await addZoneToDb(zone)
       setNewZone({ name: '', price: 0, estimatedTime: '' })
       setShowAddForm(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette zone ?')) {
+      deleteZone(id)
+      await removeZoneFromDb(id)
     }
   }
 
@@ -1658,7 +1667,7 @@ function ZonesTab() {
                 <td className="p-4 text-primary font-semibold">{formatPrice(zone.price)}</td>
                 <td className="p-4 hidden sm:table-cell">{zone.estimatedTime}</td>
                 <td className="p-4">
-                  <button onClick={() => deleteZone(zone.id)} className="p-2 hover:bg-red-100 text-red-600 rounded-lg">
+                  <button onClick={() => handleDelete(zone.id)} className="p-2 hover:bg-red-100 text-red-600 rounded-lg">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
