@@ -197,7 +197,7 @@ export default function FloatingCart({ isProfessional = false, professionalCateg
                   </span>
                 </div>
                 <Link
-                  href={isProfessional ? "/professionnels/panier" : "/panier"}
+                  href="/panier"
                   onClick={() => setIsOpen(false)}
                   className="block w-full bg-primary text-white text-center py-3 rounded-xl font-semibold hover:bg-primary-dark transition-colors"
                 >
