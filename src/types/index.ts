@@ -9,6 +9,7 @@ export interface Product {
   image: string;
   stock: number;
   isAvailable: boolean;
+  professionalDiscount?: number; // Réduction en % pour les commandes pro (ex: 20 pour -20%)
 }
 
 // Types pour les zones de livraison

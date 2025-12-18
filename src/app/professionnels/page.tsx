@@ -306,13 +306,21 @@ function ProfessionalProductCard({
   const [isAdded, setIsAdded] = useState(false)
   const addToCart = useStore((state) => state.addToCart)
 
-  // Prix affiché : professionnel pour les œufs, normal pour la viande
-  const displayPrice = product.category === 'eggs' && professionalPrice
-    ? professionalPrice
-    : product.price
+  // Prix affiché : professionnel pour les œufs, réduction % pour la viande
+  let displayPrice = product.price
+  let hasDiscount = false
+
+  if (product.category === 'eggs' && professionalPrice) {
+    // Pour les œufs, utiliser le prix pro par plateau
+    displayPrice = professionalPrice
+    hasDiscount = professionalPrice < product.price
+  } else if (product.category === 'meat' && product.professionalDiscount && product.professionalDiscount > 0) {
+    // Pour la viande, appliquer la réduction en %
+    displayPrice = Math.round(product.price * (1 - product.professionalDiscount / 100))
+    hasDiscount = true
+  }
 
   const originalPrice = product.price
-  const hasDiscount = product.category === 'eggs' && professionalPrice && professionalPrice < originalPrice
 
   const handleAddToCart = () => {
     if (quantity < minQuantity) {
@@ -351,7 +359,9 @@ function ProfessionalProductCard({
         {/* Badge réduction */}
         {hasDiscount && (
           <div className="absolute top-3 right-3 bg-red-500 text-white px-2 py-1 rounded-lg text-sm font-bold">
-            -{Math.round((1 - professionalPrice! / originalPrice) * 100)}%
+            -{product.category === 'meat' && product.professionalDiscount
+              ? product.professionalDiscount
+              : Math.round((1 - professionalPrice! / originalPrice) * 100)}%
           </div>
         )}
       </div>

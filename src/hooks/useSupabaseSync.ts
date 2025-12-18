@@ -35,6 +35,7 @@ function dbProductToProduct(db: DbProduct): Product {
     image: db.image,
     stock: db.stock,
     isAvailable: db.is_available,
+    professionalDiscount: db.professional_discount || 0,
   }
 }
 
@@ -154,6 +155,7 @@ export function useSyncToSupabase() {
     if (updates.image !== undefined) dbUpdates.image = updates.image
     if (updates.stock !== undefined) dbUpdates.stock = updates.stock
     if (updates.isAvailable !== undefined) dbUpdates.is_available = updates.isAvailable
+    if (updates.professionalDiscount !== undefined) dbUpdates.professional_discount = updates.professionalDiscount
 
     return updateProductDb(id, dbUpdates)
   }
@@ -191,6 +193,7 @@ export function useSyncToSupabase() {
       image: product.image,
       stock: product.stock,
       is_available: product.isAvailable,
+      professional_discount: product.professionalDiscount || 0,
     })
   }
 

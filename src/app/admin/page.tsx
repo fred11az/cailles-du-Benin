@@ -1107,7 +1107,7 @@ function ProductsTab() {
   const deleteProductStore = useStore((state) => state.deleteProduct)
   const { syncProduct, addProductToDb, removeProductFromDb } = useSyncToSupabase()
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ price: 0, description: '', image: '' })
+  const [editForm, setEditForm] = useState({ price: 0, description: '', image: '', professionalDiscount: 0 })
   const [showAddForm, setShowAddForm] = useState(false)
   const [showImageModal, setShowImageModal] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -1118,6 +1118,7 @@ function ProductsTab() {
     unit: 'unité',
     category: 'eggs' as 'eggs' | 'meat',
     image: '/images/eggs.jpg',
+    professionalDiscount: 0,
   })
 
   // Liste des images prédéfinies disponibles
@@ -1130,7 +1131,7 @@ function ProductsTab() {
 
   const handleEdit = (product: Product) => {
     setEditingId(product.id)
-    setEditForm({ price: product.price, description: product.description, image: product.image })
+    setEditForm({ price: product.price, description: product.description, image: product.image, professionalDiscount: product.professionalDiscount || 0 })
   }
 
   const handleSave = async (id: string) => {
@@ -1158,6 +1159,7 @@ function ProductsTab() {
         unit: 'unité',
         category: 'eggs',
         image: '/images/eggs.jpg',
+        professionalDiscount: 0,
       })
       setShowAddForm(false)
     }
@@ -1263,6 +1265,22 @@ function ProductsTab() {
                 placeholder="plateau, unité, kg..."
               />
             </div>
+            {/* Réduction pro uniquement pour la viande */}
+            {newProduct.category === 'meat' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Réduction Pro (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={newProduct.professionalDiscount || ''}
+                  onChange={(e) => setNewProduct({ ...newProduct, professionalDiscount: e.target.value === '' ? 0 : Number(e.target.value) })}
+                  className="input-field"
+                  placeholder="Ex: 20 pour -20%"
+                />
+                <p className="text-xs text-gray-500 mt-1">Réduction appliquée sur la page professionnels</p>
+              </div>
+            )}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
@@ -1387,6 +1405,22 @@ function ProductsTab() {
                     className="input-field min-h-[80px]"
                   />
                 </div>
+                {/* Réduction pro pour la viande */}
+                {product.category === 'meat' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Réduction Pro (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editForm.professionalDiscount || ''}
+                      onChange={(e) => setEditForm({ ...editForm, professionalDiscount: e.target.value === '' ? 0 : Number(e.target.value) })}
+                      className="input-field"
+                      placeholder="Ex: 20 pour -20%"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Réduction appliquée sur la page professionnels</p>
+                  </div>
+                )}
                 {/* Section modification image */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Image du produit</label>
@@ -1435,6 +1469,11 @@ function ProductsTab() {
                   {formatPrice(product.price)}
                   <span className="text-sm text-gray-500 font-normal">/{product.unit}</span>
                 </p>
+                {product.category === 'meat' && product.professionalDiscount && product.professionalDiscount > 0 && (
+                  <p className="text-sm text-green-600 font-medium">
+                    🏷️ Réduction Pro: -{product.professionalDiscount}%
+                  </p>
+                )}
                 <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
                 <button onClick={() => handleEdit(product)} className="btn-outline w-full mt-4">
                   <Edit2 className="w-4 h-4 inline mr-2" />

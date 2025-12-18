@@ -16,6 +16,7 @@ const initialProducts: Product[] = [
     image: '/images/eggs.jpg',
     stock: 100,
     isAvailable: true,
+    professionalDiscount: 0, // Géré par les tarifs professionnels (pricePerTray)
   },
   {
     id: '2',
@@ -27,6 +28,7 @@ const initialProducts: Product[] = [
     image: '/images/meat.jpg',
     stock: 50,
     isAvailable: true,
+    professionalDiscount: 20, // -20% pour les pros
   },
 ]
 

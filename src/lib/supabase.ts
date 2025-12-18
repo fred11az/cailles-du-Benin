@@ -21,6 +21,7 @@ export interface DbProduct {
   image: string
   stock: number
   is_available: boolean
+  professional_discount?: number // Réduction en % pour les commandes pro
   created_at: string
   updated_at: string
 }
