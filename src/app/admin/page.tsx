@@ -39,6 +39,7 @@ import {
   UtensilsCrossed,
 } from 'lucide-react'
 import { useStore, formatPrice, generateOrderNumber, formatDate } from '@/store/useStore'
+import { useSyncToSupabase } from '@/hooks/useSupabaseSync'
 import type { Order, Product, DeliveryZone, Expense, ExpenseCategory, ProfessionalCategory } from '@/types'
 import { EXPENSE_CATEGORIES, PROFESSIONAL_CATEGORIES } from '@/types'
 
@@ -836,6 +837,7 @@ function OrdersTab() {
   const addOrder = useStore((state) => state.addOrder)
   const products = useStore((state) => state.products)
   const zones = useStore((state) => state.zones)
+  const { syncOrderStatus } = useSyncToSupabase()
 
   const [filter, setFilter] = useState<Order['status'] | 'all'>('all')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -843,8 +845,9 @@ function OrdersTab() {
 
   const filteredOrders = filter === 'all' ? orders : orders.filter((o) => o.status === filter)
 
-  const handleStatusChange = (orderId: string, status: Order['status']) => {
+  const handleStatusChange = async (orderId: string, status: Order['status']) => {
     updateOrderStatus(orderId, status, adminSession.adminName)
+    await syncOrderStatus(orderId, status, adminSession.adminName)
   }
 
   return (
@@ -962,10 +965,12 @@ function ProductsTab() {
   const addProduct = useStore((state) => state.addProduct)
   const updateProduct = useStore((state) => state.updateProduct)
   const deleteProduct = useStore((state) => state.deleteProduct)
+  const { syncProduct } = useSyncToSupabase()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ price: 0, description: '', image: '' })
   const [showAddForm, setShowAddForm] = useState(false)
   const [showImageModal, setShowImageModal] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
@@ -988,8 +993,11 @@ function ProductsTab() {
     setEditForm({ price: product.price, description: product.description, image: product.image })
   }
 
-  const handleSave = (id: string) => {
+  const handleSave = async (id: string) => {
+    setIsSaving(true)
     updateProduct(id, editForm)
+    await syncProduct(id, editForm)
+    setIsSaving(false)
     setEditingId(null)
   }
 
@@ -1046,8 +1054,9 @@ function ProductsTab() {
   }
 
   // Fonction pour changer l'image d'un produit existant
-  const handleChangeProductImage = (productId: string, newImage: string) => {
+  const handleChangeProductImage = async (productId: string, newImage: string) => {
     updateProduct(productId, { image: newImage })
+    await syncProduct(productId, { image: newImage })
     setShowImageModal(null)
   }
 
@@ -1421,6 +1430,7 @@ function ZonesTab() {
   const addZone = useStore((state) => state.addZone)
   const updateZone = useStore((state) => state.updateZone)
   const deleteZone = useStore((state) => state.deleteZone)
+  const { syncZone } = useSyncToSupabase()
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -1522,6 +1532,7 @@ function ZonesTab() {
 function ProfessionnelsTab() {
   const professionalPricing = useStore((state) => state.professionalPricing)
   const updateProfessionalPricing = useStore((state) => state.updateProfessionalPricing)
+  const { syncProfessionalPricing } = useSyncToSupabase()
 
   const [editingId, setEditingId] = useState<ProfessionalCategory | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -1566,18 +1577,7 @@ function ProfessionnelsTab() {
       updateProfessionalPricing(editingId, updates)
 
       // Synchroniser avec Supabase
-      try {
-        const { updateProfessionalPricing: updateDb } = await import('@/lib/supabase')
-        await updateDb(editingId, {
-          price_per_tray: updates.pricePerTray,
-          min_quantity: updates.minQuantity,
-          description: updates.description,
-          has_tray: updates.hasBranding,
-          is_active: updates.isActive,
-        })
-      } catch (err) {
-        console.log('Mode local uniquement')
-      }
+      await syncProfessionalPricing(editingId, updates)
 
       setIsSaving(false)
       setEditingId(null)
