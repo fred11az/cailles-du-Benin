@@ -33,9 +33,10 @@ export default function BulkOrderingSection() {
           {/* Bouton CTA */}
           <Link
             href="/professionnels"
-            className="inline-flex items-center justify-center bg-white text-primary font-bold py-3 px-6 rounded-xl hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 whitespace-nowrap"
+            className="inline-flex items-center justify-center bg-white text-primary font-bold py-3 px-6 rounded-xl hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1 text-center"
           >
-            Cliquez ici pour commander en gros et avoir des prix réduits
+            <span className="hidden sm:inline">Cliquez ici pour commander en gros et avoir des prix réduits</span>
+            <span className="sm:hidden">Commander en gros</span>
             <ArrowRight className="w-5 h-5 ml-2 flex-shrink-0" />
           </Link>
         </div>
