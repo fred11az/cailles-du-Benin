@@ -13,6 +13,10 @@ import {
   updateDeliveryZone as updateDeliveryZoneDb,
   updateOrderStatus as updateOrderStatusDb,
   createOrder as createOrderDb,
+  createProduct as createProductDb,
+  deleteProduct as deleteProductDb,
+  createDeliveryZone as createDeliveryZoneDb,
+  deleteDeliveryZone as deleteDeliveryZoneDb,
   DbProduct,
   DbDeliveryZone,
   DbProfessionalPricing,
@@ -175,11 +179,51 @@ export function useSyncToSupabase() {
     return updateOrderStatusDb(id, status, validatedBy)
   }
 
+  const addProductToDb = async (product: Product): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+    return createProductDb({
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      unit: product.unit,
+      category: product.category,
+      image: product.image,
+      stock: product.stock,
+      is_available: product.isAvailable,
+    })
+  }
+
+  const removeProductFromDb = async (id: string): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+    return deleteProductDb(id)
+  }
+
+  const addZoneToDb = async (zone: DeliveryZone): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+    return createDeliveryZoneDb({
+      id: zone.id,
+      name: zone.name,
+      price: zone.price,
+      estimated_time: zone.estimatedTime,
+      is_active: zone.isActive,
+    })
+  }
+
+  const removeZoneFromDb = async (id: string): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+    return deleteDeliveryZoneDb(id)
+  }
+
   return {
     syncProfessionalPricing,
     syncProduct,
     syncZone,
     syncOrderStatus,
+    addProductToDb,
+    removeProductFromDb,
+    addZoneToDb,
+    removeZoneFromDb,
     isSupabaseConfigured,
   }
 }

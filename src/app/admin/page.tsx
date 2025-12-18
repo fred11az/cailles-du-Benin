@@ -520,48 +520,90 @@ function ProductionTab() {
   const updateProductionStats = useStore((state) => state.updateProductionStats)
   const collectEggs = useStore((state) => state.collectEggs)
   const processQuails = useStore((state) => state.processQuails)
+  const recordQuailLoss = useStore((state) => state.recordQuailLoss)
   const dailyProductions = useStore((state) => state.dailyProductions)
   const addDailyProduction = useStore((state) => state.addDailyProduction)
   const adminSession = useStore((state) => state.adminSession)
 
   const [showCollectModal, setShowCollectModal] = useState(false)
   const [showProcessModal, setShowProcessModal] = useState(false)
+  const [showLossModal, setShowLossModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [eggsToCollect, setEggsToCollect] = useState(0)
-  const [quailsToProcess, setQuailsToProcess] = useState(0)
+
+  // États pour les formulaires avec date et notes
+  const [collectForm, setCollectForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    quantity: 0,
+    notes: ''
+  })
+  const [processForm, setProcessForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    quantity: 0,
+    notes: ''
+  })
+  const [lossForm, setLossForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    quantity: 0,
+    notes: ''
+  })
   const [editStats, setEditStats] = useState(productionStats)
 
+  // Réinitialiser les formulaires
+  const resetCollectForm = () => setCollectForm({ date: new Date().toISOString().split('T')[0], quantity: 0, notes: '' })
+  const resetProcessForm = () => setProcessForm({ date: new Date().toISOString().split('T')[0], quantity: 0, notes: '' })
+  const resetLossForm = () => setLossForm({ date: new Date().toISOString().split('T')[0], quantity: 0, notes: '' })
+
   const handleCollectEggs = () => {
-    if (eggsToCollect > 0) {
-      collectEggs(eggsToCollect)
+    if (collectForm.quantity > 0) {
+      collectEggs(collectForm.quantity)
       addDailyProduction({
         id: crypto.randomUUID(),
-        date: new Date().toISOString().split('T')[0],
-        eggsCollected: eggsToCollect,
+        date: collectForm.date,
+        eggsCollected: collectForm.quantity,
         quailsProcessed: 0,
+        quailsLost: 0,
+        notes: collectForm.notes || undefined,
         createdAt: new Date().toISOString(),
         createdBy: adminSession.adminName,
       })
-      setEggsToCollect(0)
+      resetCollectForm()
       setShowCollectModal(false)
     }
   }
 
   const handleProcessQuails = () => {
-    if (quailsToProcess > 0) {
-      // 1 caille traitée = 1 unité de viande
-      processQuails(quailsToProcess, quailsToProcess)
+    if (processForm.quantity > 0) {
+      processQuails(processForm.quantity, processForm.quantity)
       addDailyProduction({
         id: crypto.randomUUID(),
-        date: new Date().toISOString().split('T')[0],
+        date: processForm.date,
         eggsCollected: 0,
-        quailsProcessed: quailsToProcess,
-        notes: `${quailsToProcess} unités de viande produites`,
+        quailsProcessed: processForm.quantity,
+        quailsLost: 0,
+        notes: processForm.notes || `${processForm.quantity} unités de viande produites`,
         createdAt: new Date().toISOString(),
         createdBy: adminSession.adminName,
       })
-      setQuailsToProcess(0)
+      resetProcessForm()
       setShowProcessModal(false)
+    }
+  }
+
+  const handleRecordLoss = () => {
+    if (lossForm.quantity > 0) {
+      recordQuailLoss(lossForm.quantity)
+      addDailyProduction({
+        id: crypto.randomUUID(),
+        date: lossForm.date,
+        eggsCollected: 0,
+        quailsProcessed: 0,
+        quailsLost: lossForm.quantity,
+        notes: lossForm.notes || `${lossForm.quantity} cailles perdues`,
+        createdAt: new Date().toISOString(),
+        createdBy: adminSession.adminName,
+      })
+      resetLossForm()
+      setShowLossModal(false)
     }
   }
 
@@ -633,9 +675,9 @@ function ProductionTab() {
       </div>
 
       {/* Actions rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button
-          onClick={() => setShowCollectModal(true)}
+          onClick={() => { resetCollectForm(); setShowCollectModal(true) }}
           className="bg-yellow-50 hover:bg-yellow-100 border-2 border-yellow-200 rounded-2xl p-6 text-left transition-colors"
         >
           <div className="flex items-center space-x-4">
@@ -644,22 +686,37 @@ function ProductionTab() {
             </div>
             <div>
               <h3 className="font-bold text-gray-900 text-lg">Ramasser des œufs</h3>
-              <p className="text-sm text-gray-600">Enregistrer la collecte du jour</p>
+              <p className="text-sm text-gray-600">Enregistrer la collecte</p>
             </div>
           </div>
         </button>
 
         <button
-          onClick={() => setShowProcessModal(true)}
+          onClick={() => { resetProcessForm(); setShowProcessModal(true) }}
+          className="bg-green-50 hover:bg-green-100 border-2 border-green-200 rounded-2xl p-6 text-left transition-colors"
+        >
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 bg-green-200 rounded-xl flex items-center justify-center">
+              <Scale className="w-8 h-8 text-green-700" />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 text-lg">Traiter des cailles</h3>
+              <p className="text-sm text-gray-600">Enregistrer l&apos;abattage</p>
+            </div>
+          </div>
+        </button>
+
+        <button
+          onClick={() => { resetLossForm(); setShowLossModal(true) }}
           className="bg-red-50 hover:bg-red-100 border-2 border-red-200 rounded-2xl p-6 text-left transition-colors"
         >
           <div className="flex items-center space-x-4">
             <div className="w-14 h-14 bg-red-200 rounded-xl flex items-center justify-center">
-              <Scale className="w-8 h-8 text-red-700" />
+              <XCircle className="w-8 h-8 text-red-700" />
             </div>
             <div>
-              <h3 className="font-bold text-gray-900 text-lg">Traiter des cailles</h3>
-              <p className="text-sm text-gray-600">Enregistrer l&apos;abattage et la viande</p>
+              <h3 className="font-bold text-gray-900 text-lg">Pertes / Morts</h3>
+              <p className="text-sm text-gray-600">Enregistrer les pertes</p>
             </div>
           </div>
         </button>
@@ -678,14 +735,15 @@ function ProductionTab() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left p-4 font-medium text-gray-600">Date</th>
-                  <th className="text-left p-4 font-medium text-gray-600">Œufs collectés</th>
-                  <th className="text-left p-4 font-medium text-gray-600">Cailles traitées</th>
+                  <th className="text-left p-4 font-medium text-gray-600">Œufs</th>
+                  <th className="text-left p-4 font-medium text-gray-600">Traitement</th>
+                  <th className="text-left p-4 font-medium text-gray-600">Pertes</th>
                   <th className="text-left p-4 font-medium text-gray-600">Notes</th>
                 </tr>
               </thead>
               <tbody>
-                {dailyProductions.slice(0, 20).map((prod) => (
-                  <tr key={prod.id} className="border-b">
+                {dailyProductions.slice(0, 30).map((prod) => (
+                  <tr key={prod.id} className="border-b hover:bg-gray-50">
                     <td className="p-4">
                       {formatDate(prod.date)}
                       {prod.createdBy && (
@@ -695,18 +753,25 @@ function ProductionTab() {
                     <td className="p-4">
                       {prod.eggsCollected > 0 && (
                         <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm">
-                          {prod.eggsCollected} œufs
+                          +{prod.eggsCollected} œufs
                         </span>
                       )}
                     </td>
                     <td className="p-4">
                       {prod.quailsProcessed > 0 && (
-                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
+                        <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm">
                           {prod.quailsProcessed} cailles
                         </span>
                       )}
                     </td>
-                    <td className="p-4 text-sm text-gray-600">{prod.notes}</td>
+                    <td className="p-4">
+                      {(prod.quailsLost ?? 0) > 0 && (
+                        <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm">
+                          -{prod.quailsLost} mortes
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-sm text-gray-600 max-w-xs truncate">{prod.notes}</td>
                   </tr>
                 ))}
               </tbody>
@@ -720,17 +785,35 @@ function ProductionTab() {
         <Modal title="Ramasser des œufs" onClose={() => setShowCollectModal(false)}>
           <div className="space-y-4">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={collectForm.date}
+                onChange={(e) => setCollectForm({ ...collectForm, date: e.target.value })}
+                className="input-field"
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nombre d&apos;œufs collectés</label>
               <input
                 type="number"
-                value={eggsToCollect || ''}
-                onChange={(e) => setEggsToCollect(Number(e.target.value))}
+                value={collectForm.quantity || ''}
+                onChange={(e) => setCollectForm({ ...collectForm, quantity: Number(e.target.value) })}
                 className="input-field"
                 placeholder="Ex: 150"
               />
-              {eggsToCollect > 0 && (
-                <p className="text-sm text-gray-500 mt-1">= {Math.floor(eggsToCollect / 30)} plateaux</p>
+              {collectForm.quantity > 0 && (
+                <p className="text-sm text-gray-500 mt-1">= {Math.floor(collectForm.quantity / 30)} plateaux</p>
               )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
+              <textarea
+                value={collectForm.notes}
+                onChange={(e) => setCollectForm({ ...collectForm, notes: e.target.value })}
+                className="input-field min-h-[60px]"
+                placeholder="Observations, remarques..."
+              />
             </div>
             <button onClick={handleCollectEggs} className="btn-primary w-full">
               Enregistrer la collecte
@@ -744,20 +827,77 @@ function ProductionTab() {
         <Modal title="Traiter des cailles" onClose={() => setShowProcessModal(false)}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de cailles à traiter (mâles)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={processForm.date}
+                onChange={(e) => setProcessForm({ ...processForm, date: e.target.value })}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de cailles à traiter</label>
               <input
                 type="number"
-                value={quailsToProcess || ''}
-                onChange={(e) => setQuailsToProcess(Number(e.target.value))}
+                value={processForm.quantity || ''}
+                onChange={(e) => setProcessForm({ ...processForm, quantity: Number(e.target.value) })}
                 className="input-field"
                 placeholder="Ex: 20"
               />
-              {quailsToProcess > 0 && (
-                <p className="text-sm text-gray-500 mt-1">= {quailsToProcess} unités de viande</p>
+              {processForm.quantity > 0 && (
+                <p className="text-sm text-gray-500 mt-1">= {processForm.quantity} unités de viande</p>
               )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
+              <textarea
+                value={processForm.notes}
+                onChange={(e) => setProcessForm({ ...processForm, notes: e.target.value })}
+                className="input-field min-h-[60px]"
+                placeholder="Observations, remarques..."
+              />
             </div>
             <button onClick={handleProcessQuails} className="btn-primary w-full">
               Enregistrer le traitement
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal Pertes */}
+      {showLossModal && (
+        <Modal title="Enregistrer des pertes" onClose={() => setShowLossModal(false)}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={lossForm.date}
+                onChange={(e) => setLossForm({ ...lossForm, date: e.target.value })}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre de cailles perdues/mortes</label>
+              <input
+                type="number"
+                value={lossForm.quantity || ''}
+                onChange={(e) => setLossForm({ ...lossForm, quantity: Number(e.target.value) })}
+                className="input-field"
+                placeholder="Ex: 5"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cause / Notes</label>
+              <textarea
+                value={lossForm.notes}
+                onChange={(e) => setLossForm({ ...lossForm, notes: e.target.value })}
+                className="input-field min-h-[60px]"
+                placeholder="Ex: Maladie, stress thermique, prédateur..."
+              />
+            </div>
+            <button onClick={handleRecordLoss} className="btn-primary w-full bg-red-600 hover:bg-red-700">
+              Enregistrer les pertes
             </button>
           </div>
         </Modal>
@@ -964,8 +1104,8 @@ function ProductsTab() {
   const products = useStore((state) => state.products)
   const addProduct = useStore((state) => state.addProduct)
   const updateProduct = useStore((state) => state.updateProduct)
-  const deleteProduct = useStore((state) => state.deleteProduct)
-  const { syncProduct } = useSyncToSupabase()
+  const deleteProductStore = useStore((state) => state.deleteProduct)
+  const { syncProduct, addProductToDb, removeProductFromDb } = useSyncToSupabase()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ price: 0, description: '', image: '' })
   const [showAddForm, setShowAddForm] = useState(false)
@@ -1001,14 +1141,16 @@ function ProductsTab() {
     setEditingId(null)
   }
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (newProduct.name && newProduct.price > 0) {
-      addProduct({
+      const product = {
         id: crypto.randomUUID(),
         ...newProduct,
         stock: 100,
         isAvailable: true,
-      })
+      }
+      addProduct(product)
+      await addProductToDb(product)
       setNewProduct({
         name: '',
         description: '',
@@ -1021,9 +1163,10 @@ function ProductsTab() {
     }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-      deleteProduct(id)
+      deleteProductStore(id)
+      await removeProductFromDb(id)
     }
   }
 

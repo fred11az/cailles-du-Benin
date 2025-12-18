@@ -204,33 +204,29 @@ export async function createOrder(order: Omit<DbOrder, 'id' | 'created_at' | 'up
 }
 
 // Ajouter un produit
-export async function createProduct(product: Omit<DbProduct, 'id' | 'created_at' | 'updated_at'>): Promise<DbProduct | null> {
-  if (!supabase) return null
-  const { data, error } = await supabase
+export async function createProduct(product: Omit<DbProduct, 'created_at' | 'updated_at'>): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
     .from('products')
     .insert(product)
-    .select()
-    .single()
   if (error) {
     console.error('Erreur create product:', error)
-    return null
+    return false
   }
-  return data
+  return true
 }
 
 // Ajouter une zone
-export async function createDeliveryZone(zone: Omit<DbDeliveryZone, 'id' | 'created_at' | 'updated_at'>): Promise<DbDeliveryZone | null> {
-  if (!supabase) return null
-  const { data, error } = await supabase
+export async function createDeliveryZone(zone: Omit<DbDeliveryZone, 'created_at' | 'updated_at'>): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
     .from('delivery_zones')
     .insert(zone)
-    .select()
-    .single()
   if (error) {
     console.error('Erreur create zone:', error)
-    return null
+    return false
   }
-  return data
+  return true
 }
 
 // ============ FONCTIONS DE SUPPRESSION ============

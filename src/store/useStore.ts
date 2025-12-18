@@ -141,6 +141,7 @@ interface StoreState {
   addDailyProduction: (production: DailyProduction) => void
   collectEggs: (quantity: number) => void
   processQuails: (quantity: number, meatKg: number) => void
+  recordQuailLoss: (quantity: number) => void
 
   // Tarifs professionnels
   professionalPricing: ProfessionalPricing[]
@@ -337,6 +338,14 @@ export const useStore = create<StoreState>()(
             ...state.productionStats,
             totalQuails: Math.max(0, state.productionStats.totalQuails - quantity),
             totalMeatInStock: state.productionStats.totalMeatInStock + meatKg,
+            lastUpdated: new Date().toISOString(),
+          },
+        })),
+      recordQuailLoss: (quantity) =>
+        set((state) => ({
+          productionStats: {
+            ...state.productionStats,
+            totalQuails: Math.max(0, state.productionStats.totalQuails - quantity),
             lastUpdated: new Date().toISOString(),
           },
         })),

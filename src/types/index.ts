@@ -99,6 +99,7 @@ export interface DailyProduction {
   date: string;
   eggsCollected: number;
   quailsProcessed: number; // Cailles abattues
+  quailsLost: number; // Cailles mortes/perdues
   notes?: string;
   createdAt: string;
   createdBy?: string; // Admin qui a enregistré cette production
