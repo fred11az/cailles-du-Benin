@@ -281,19 +281,91 @@ CREATE POLICY "Insert expenses" ON expenses FOR INSERT WITH CHECK (true);
 CREATE POLICY "Update expenses" ON expenses FOR UPDATE USING (true);
 CREATE POLICY "Delete expenses" ON expenses FOR DELETE USING (true);
 
--- ============ CONFIGURATION WEBHOOK POUR NOTIFICATIONS EMAIL ============
--- Le webhook doit être configuré dans le Dashboard Supabase:
--- 1. Aller dans Database > Webhooks
--- 2. Créer un nouveau webhook avec:
---    - Nom: send-order-notification
---    - Table: orders
---    - Events: INSERT
---    - Type: Supabase Edge Functions
---    - Edge Function: send-order-notification
+-- ============ NOTIFICATION EMAIL AUTOMATIQUE ============
+-- Active l'extension pg_net pour les requêtes HTTP
+CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
+
+-- Fonction pour envoyer une notification email via SMTP
+CREATE OR REPLACE FUNCTION send_order_email_notification()
+RETURNS TRIGGER AS $$
+DECLARE
+  smtp_host TEXT := 'smtp.gmail.com';
+  smtp_port INTEGER := 465;
+  smtp_user TEXT := current_setting('app.smtp_user', true);
+  smtp_password TEXT := current_setting('app.smtp_password', true);
+  admin_email TEXT := 'fermemahutin@gmail.com';
+  email_subject TEXT;
+  email_body TEXT;
+  items_text TEXT := '';
+  item RECORD;
+BEGIN
+  -- Construire la liste des produits
+  FOR item IN SELECT * FROM jsonb_to_recordset(NEW.items::jsonb) AS x(product_name TEXT, quantity INTEGER, price INTEGER)
+  LOOP
+    items_text := items_text || '• ' || item.product_name || ' x' || item.quantity || ' - ' || (item.price * item.quantity) || ' FCFA' || E'\n';
+  END LOOP;
+
+  -- Sujet de l'email
+  email_subject := '🥚 Nouvelle commande #' || NEW.order_number || ' - ' || NEW.total || ' FCFA';
+
+  -- Corps de l'email
+  email_body := 'NOUVELLE COMMANDE #' || NEW.order_number || E'\n\n' ||
+    'CLIENT:' || E'\n' ||
+    'Nom: ' || NEW.customer_name || E'\n' ||
+    'Téléphone: ' || NEW.customer_phone || E'\n' ||
+    'Adresse: ' || NEW.customer_address || E'\n\n' ||
+    'PRODUITS:' || E'\n' || items_text || E'\n' ||
+    'Sous-total: ' || NEW.subtotal || ' FCFA' || E'\n' ||
+    'Livraison: ' || NEW.delivery_fee || ' FCFA' || E'\n' ||
+    'TOTAL: ' || NEW.total || ' FCFA' || E'\n\n' ||
+    '-- Mahutin Ferme - Cailles du Bénin';
+
+  -- Appeler l'Edge Function via HTTP (si déployée)
+  -- Ou envoyer via un service externe
+  PERFORM net.http_post(
+    url := current_setting('app.supabase_url', true) || '/functions/v1/send-order-notification',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || current_setting('app.supabase_anon_key', true)
+    ),
+    body := jsonb_build_object(
+      'type', 'INSERT',
+      'table', 'orders',
+      'record', jsonb_build_object(
+        'id', NEW.id,
+        'order_number', NEW.order_number,
+        'customer_name', NEW.customer_name,
+        'customer_phone', NEW.customer_phone,
+        'customer_address', NEW.customer_address,
+        'items', NEW.items,
+        'subtotal', NEW.subtotal,
+        'delivery_fee', NEW.delivery_fee,
+        'total', NEW.total,
+        'created_at', NEW.created_at
+      )
+    )
+  );
+
+  RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log l'erreur mais ne bloque pas l'insertion
+    RAISE WARNING 'Erreur envoi notification email: %', SQLERRM;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger pour envoyer l'email à chaque nouvelle commande
+DROP TRIGGER IF EXISTS on_new_order_send_email ON orders;
+CREATE TRIGGER on_new_order_send_email
+  AFTER INSERT ON orders
+  FOR EACH ROW
+  EXECUTE FUNCTION send_order_email_notification();
+
+-- ============ CONFIGURATION REQUISE ============
+-- Exécuter ces commandes une seule fois pour configurer les paramètres:
 --
--- Configuration des secrets pour l'Edge Function (via Supabase Dashboard > Edge Functions > Secrets):
---   SMTP_HOST=smtp.gmail.com
---   SMTP_PORT=465
---   SMTP_USER=votre-email@gmail.com
---   SMTP_PASSWORD=votre-mot-de-passe-application
---   ADMIN_EMAIL=fermemahutin@gmail.com
+-- ALTER DATABASE postgres SET app.supabase_url = 'https://VOTRE-PROJECT.supabase.co';
+-- ALTER DATABASE postgres SET app.supabase_anon_key = 'VOTRE-ANON-KEY';
+-- ALTER DATABASE postgres SET app.smtp_user = 'fermemahutin@gmail.com';
+-- ALTER DATABASE postgres SET app.smtp_password = 'VOTRE-MOT-DE-PASSE-APP';
