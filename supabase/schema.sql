@@ -169,3 +169,114 @@ CREATE POLICY "Insert products" ON products FOR INSERT WITH CHECK (true);
 CREATE POLICY "Insert zones" ON delivery_zones FOR INSERT WITH CHECK (true);
 CREATE POLICY "Delete products" ON products FOR DELETE USING (true);
 CREATE POLICY "Delete zones" ON delivery_zones FOR DELETE USING (true);
+
+-- Table des statistiques de production
+CREATE TABLE IF NOT EXISTS production_stats (
+  id VARCHAR(50) PRIMARY KEY DEFAULT 'main',
+  total_quails INTEGER DEFAULT 500,
+  male_quails INTEGER DEFAULT 100,
+  female_quails INTEGER DEFAULT 400,
+  eggs_collected_today INTEGER DEFAULT 0,
+  total_eggs_in_stock INTEGER DEFAULT 3000,
+  total_meat_in_stock INTEGER DEFAULT 50,
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_updated_by VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Table de production journalière
+CREATE TABLE IF NOT EXISTS daily_production (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  date DATE NOT NULL,
+  eggs_collected INTEGER DEFAULT 0,
+  quails_processed INTEGER DEFAULT 0,
+  quails_lost INTEGER DEFAULT 0,
+  notes TEXT,
+  created_by VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Insertion des données initiales - Production stats
+INSERT INTO production_stats (id, total_quails, male_quails, female_quails, eggs_collected_today, total_eggs_in_stock, total_meat_in_stock)
+VALUES ('main', 500, 100, 400, 0, 3000, 50)
+ON CONFLICT (id) DO NOTHING;
+
+-- Index pour daily_production
+CREATE INDEX IF NOT EXISTS idx_daily_production_date ON daily_production(date);
+CREATE INDEX IF NOT EXISTS idx_daily_production_created_by ON daily_production(created_by);
+
+-- Triggers pour updated_at
+DROP TRIGGER IF EXISTS update_production_stats_updated_at ON production_stats;
+CREATE TRIGGER update_production_stats_updated_at
+  BEFORE UPDATE ON production_stats
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_daily_production_updated_at ON daily_production;
+CREATE TRIGGER update_daily_production_updated_at
+  BEFORE UPDATE ON daily_production
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Activer RLS sur les nouvelles tables
+ALTER TABLE production_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_production ENABLE ROW LEVEL SECURITY;
+
+-- Policies pour production_stats
+DROP POLICY IF EXISTS "Production stats visibles par tous" ON production_stats;
+DROP POLICY IF EXISTS "Update production_stats" ON production_stats;
+DROP POLICY IF EXISTS "Insert production_stats" ON production_stats;
+
+CREATE POLICY "Production stats visibles par tous" ON production_stats FOR SELECT USING (true);
+CREATE POLICY "Update production_stats" ON production_stats FOR UPDATE USING (true);
+CREATE POLICY "Insert production_stats" ON production_stats FOR INSERT WITH CHECK (true);
+
+-- Policies pour daily_production
+DROP POLICY IF EXISTS "Daily production visible par tous" ON daily_production;
+DROP POLICY IF EXISTS "Insert daily_production" ON daily_production;
+DROP POLICY IF EXISTS "Update daily_production" ON daily_production;
+DROP POLICY IF EXISTS "Delete daily_production" ON daily_production;
+
+CREATE POLICY "Daily production visible par tous" ON daily_production FOR SELECT USING (true);
+CREATE POLICY "Insert daily_production" ON daily_production FOR INSERT WITH CHECK (true);
+CREATE POLICY "Update daily_production" ON daily_production FOR UPDATE USING (true);
+CREATE POLICY "Delete daily_production" ON daily_production FOR DELETE USING (true);
+
+-- Table des dépenses (comptabilité)
+CREATE TABLE IF NOT EXISTS expenses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  date DATE NOT NULL,
+  category VARCHAR(50) NOT NULL CHECK (category IN ('provende', 'medicament', 'equipement', 'salaire', 'transport', 'electricite', 'eau', 'autre')),
+  description TEXT,
+  amount INTEGER NOT NULL,
+  created_by VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index pour expenses
+CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
+CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category);
+
+-- Trigger pour updated_at sur expenses
+DROP TRIGGER IF EXISTS update_expenses_updated_at ON expenses;
+CREATE TRIGGER update_expenses_updated_at
+  BEFORE UPDATE ON expenses
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Activer RLS sur expenses
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+
+-- Policies pour expenses
+DROP POLICY IF EXISTS "Expenses visible par tous" ON expenses;
+DROP POLICY IF EXISTS "Insert expenses" ON expenses;
+DROP POLICY IF EXISTS "Update expenses" ON expenses;
+DROP POLICY IF EXISTS "Delete expenses" ON expenses;
+
+CREATE POLICY "Expenses visible par tous" ON expenses FOR SELECT USING (true);
+CREATE POLICY "Insert expenses" ON expenses FOR INSERT WITH CHECK (true);
+CREATE POLICY "Update expenses" ON expenses FOR UPDATE USING (true);
+CREATE POLICY "Delete expenses" ON expenses FOR DELETE USING (true);

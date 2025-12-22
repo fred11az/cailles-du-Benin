@@ -319,11 +319,12 @@ function DashboardTab({
 function AccountingTab() {
   const expenses = useStore((state) => state.expenses)
   const addExpense = useStore((state) => state.addExpense)
-  const deleteExpense = useStore((state) => state.deleteExpense)
+  const deleteExpenseStore = useStore((state) => state.deleteExpense)
   const getTotalExpenses = useStore((state) => state.getTotalExpenses)
   const getTotalRevenue = useStore((state) => state.getTotalRevenue)
   const getNetProfit = useStore((state) => state.getNetProfit)
   const adminSession = useStore((state) => state.adminSession)
+  const { addExpenseToDb, removeExpenseFromDb } = useSyncToSupabase()
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [newExpense, setNewExpense] = useState({
@@ -333,14 +334,16 @@ function AccountingTab() {
     amount: 0,
   })
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (newExpense.description && newExpense.amount > 0) {
-      addExpense({
+      const expense = {
         id: crypto.randomUUID(),
         ...newExpense,
         createdAt: new Date().toISOString(),
         createdBy: adminSession.adminName,
-      })
+      }
+      addExpense(expense)
+      await addExpenseToDb(expense)
       setNewExpense({
         date: new Date().toISOString().split('T')[0],
         category: 'provende',
@@ -349,6 +352,11 @@ function AccountingTab() {
       })
       setShowAddForm(false)
     }
+  }
+
+  const handleDeleteExpense = async (id: string) => {
+    deleteExpenseStore(id)
+    await removeExpenseFromDb(id)
   }
 
   // Grouper les dépenses par catégorie
@@ -497,7 +505,7 @@ function AccountingTab() {
                     <td className="p-4 font-semibold text-red-600">{formatPrice(expense.amount)}</td>
                     <td className="p-4">
                       <button
-                        onClick={() => deleteExpense(expense.id)}
+                        onClick={() => handleDeleteExpense(expense.id)}
                         className="p-2 hover:bg-red-100 text-red-600 rounded-lg"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -524,6 +532,7 @@ function ProductionTab() {
   const dailyProductions = useStore((state) => state.dailyProductions)
   const addDailyProduction = useStore((state) => state.addDailyProduction)
   const adminSession = useStore((state) => state.adminSession)
+  const { syncProductionStats, addDailyProductionToDb } = useSyncToSupabase()
 
   const [showCollectModal, setShowCollectModal] = useState(false)
   const [showProcessModal, setShowProcessModal] = useState(false)
@@ -553,10 +562,10 @@ function ProductionTab() {
   const resetProcessForm = () => setProcessForm({ date: new Date().toISOString().split('T')[0], quantity: 0, notes: '' })
   const resetLossForm = () => setLossForm({ date: new Date().toISOString().split('T')[0], quantity: 0, notes: '' })
 
-  const handleCollectEggs = () => {
+  const handleCollectEggs = async () => {
     if (collectForm.quantity > 0) {
       collectEggs(collectForm.quantity)
-      addDailyProduction({
+      const dailyProd = {
         id: crypto.randomUUID(),
         date: collectForm.date,
         eggsCollected: collectForm.quantity,
@@ -565,16 +574,23 @@ function ProductionTab() {
         notes: collectForm.notes || undefined,
         createdAt: new Date().toISOString(),
         createdBy: adminSession.adminName,
-      })
+      }
+      addDailyProduction(dailyProd)
+
+      // Synchroniser avec Supabase
+      const updatedStats = useStore.getState().productionStats
+      await syncProductionStats(updatedStats)
+      await addDailyProductionToDb(dailyProd)
+
       resetCollectForm()
       setShowCollectModal(false)
     }
   }
 
-  const handleProcessQuails = () => {
+  const handleProcessQuails = async () => {
     if (processForm.quantity > 0) {
       processQuails(processForm.quantity, processForm.quantity)
-      addDailyProduction({
+      const dailyProd = {
         id: crypto.randomUUID(),
         date: processForm.date,
         eggsCollected: 0,
@@ -583,16 +599,23 @@ function ProductionTab() {
         notes: processForm.notes || `${processForm.quantity} unités de viande produites`,
         createdAt: new Date().toISOString(),
         createdBy: adminSession.adminName,
-      })
+      }
+      addDailyProduction(dailyProd)
+
+      // Synchroniser avec Supabase
+      const updatedStats = useStore.getState().productionStats
+      await syncProductionStats(updatedStats)
+      await addDailyProductionToDb(dailyProd)
+
       resetProcessForm()
       setShowProcessModal(false)
     }
   }
 
-  const handleRecordLoss = () => {
+  const handleRecordLoss = async () => {
     if (lossForm.quantity > 0) {
       recordQuailLoss(lossForm.quantity)
-      addDailyProduction({
+      const dailyProd = {
         id: crypto.randomUUID(),
         date: lossForm.date,
         eggsCollected: 0,
@@ -601,14 +624,23 @@ function ProductionTab() {
         notes: lossForm.notes || `${lossForm.quantity} cailles perdues`,
         createdAt: new Date().toISOString(),
         createdBy: adminSession.adminName,
-      })
+      }
+      addDailyProduction(dailyProd)
+
+      // Synchroniser avec Supabase
+      const updatedStats = useStore.getState().productionStats
+      await syncProductionStats(updatedStats)
+      await addDailyProductionToDb(dailyProd)
+
       resetLossForm()
       setShowLossModal(false)
     }
   }
 
-  const handleSaveStats = () => {
-    updateProductionStats({ ...editStats, lastUpdatedBy: adminSession.adminName })
+  const handleSaveStats = async () => {
+    const updatedStats = { ...editStats, lastUpdatedBy: adminSession.adminName }
+    updateProductionStats(updatedStats)
+    await syncProductionStats(updatedStats)
     setShowEditModal(false)
   }
 
@@ -977,7 +1009,7 @@ function OrdersTab() {
   const addOrder = useStore((state) => state.addOrder)
   const products = useStore((state) => state.products)
   const zones = useStore((state) => state.zones)
-  const { syncOrderStatus } = useSyncToSupabase()
+  const { syncOrderStatus, addOrderToDb } = useSyncToSupabase()
 
   const [filter, setFilter] = useState<Order['status'] | 'all'>('all')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
@@ -988,6 +1020,11 @@ function OrdersTab() {
   const handleStatusChange = async (orderId: string, status: Order['status']) => {
     updateOrderStatus(orderId, status, adminSession.adminName)
     await syncOrderStatus(orderId, status, adminSession.adminName)
+  }
+
+  const handleAddOrder = async (order: Order) => {
+    addOrder(order)
+    await addOrderToDb(order)
   }
 
   return (
@@ -1093,7 +1130,7 @@ function OrdersTab() {
 
       {selectedOrder && <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
       {showAddModal && (
-        <AddOrderModal onClose={() => setShowAddModal(false)} products={products} zones={zones} onAdd={addOrder} />
+        <AddOrderModal onClose={() => setShowAddModal(false)} products={products} zones={zones} onAdd={handleAddOrder} />
       )}
     </div>
   )
@@ -1572,26 +1609,33 @@ function ZonesTab() {
   const zones = useStore((state) => state.zones)
   const addZone = useStore((state) => state.addZone)
   const updateZone = useStore((state) => state.updateZone)
-  const deleteZone = useStore((state) => state.deleteZone)
-  const { syncZone } = useSyncToSupabase()
+  const deleteZoneStore = useStore((state) => state.deleteZone)
+  const { syncZone, addZoneToDb, removeZoneFromDb } = useSyncToSupabase()
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [newZone, setNewZone] = useState({ name: '', price: 0, estimatedTime: '' })
   const [editForm, setEditForm] = useState({ name: '', price: 0, estimatedTime: '' })
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (newZone.name && newZone.price > 0) {
-      addZone({
+      const zone = {
         id: crypto.randomUUID(),
         name: newZone.name,
         price: newZone.price,
         estimatedTime: newZone.estimatedTime || '2-3 heures',
         isActive: true,
-      })
+      }
+      addZone(zone)
+      await addZoneToDb(zone)
       setNewZone({ name: '', price: 0, estimatedTime: '' })
       setShowAddForm(false)
     }
+  }
+
+  const handleDelete = async (zoneId: string) => {
+    deleteZoneStore(zoneId)
+    await removeZoneFromDb(zoneId)
   }
 
   return (
@@ -1658,7 +1702,7 @@ function ZonesTab() {
                 <td className="p-4 text-primary font-semibold">{formatPrice(zone.price)}</td>
                 <td className="p-4 hidden sm:table-cell">{zone.estimatedTime}</td>
                 <td className="p-4">
-                  <button onClick={() => deleteZone(zone.id)} className="p-2 hover:bg-red-100 text-red-600 rounded-lg">
+                  <button onClick={() => handleDelete(zone.id)} className="p-2 hover:bg-red-100 text-red-600 rounded-lg">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
@@ -2064,7 +2108,7 @@ function AddOrderModal({
   onClose: () => void
   products: Product[]
   zones: DeliveryZone[]
-  onAdd: (order: Order) => void
+  onAdd: (order: Order) => void | Promise<void>
 }) {
   const [formData, setFormData] = useState({
     customerName: '',
@@ -2192,7 +2236,7 @@ function AddOrderModal({
               <span className="text-primary">{formatPrice(total)}</span>
             </div>
           </div>
-          <button onClick={handleSubmit} className="btn-primary w-full">
+          <button type="button" onClick={handleSubmit} className="btn-primary w-full">
             Créer la commande
           </button>
         </div>

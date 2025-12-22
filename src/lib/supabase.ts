@@ -70,6 +70,43 @@ export interface DbProfessionalPricing {
   updated_at: string
 }
 
+export interface DbProductionStats {
+  id: string
+  total_quails: number
+  male_quails: number
+  female_quails: number
+  eggs_collected_today: number
+  total_eggs_in_stock: number
+  total_meat_in_stock: number
+  last_updated: string
+  last_updated_by?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DbDailyProduction {
+  id: string
+  date: string
+  eggs_collected: number
+  quails_processed: number
+  quails_lost: number
+  notes?: string
+  created_by?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface DbExpense {
+  id: string
+  date: string
+  category: string
+  description?: string
+  amount: number
+  created_by?: string
+  created_at: string
+  updated_at: string
+}
+
 // ============ FONCTIONS DE LECTURE ============
 
 // Récupérer les produits
@@ -123,6 +160,50 @@ export async function fetchOrders(): Promise<DbOrder[] | null> {
     .order('created_at', { ascending: false })
   if (error) {
     console.error('Erreur fetch orders:', error)
+    return null
+  }
+  return data
+}
+
+// Récupérer les statistiques de production
+export async function fetchProductionStats(): Promise<DbProductionStats | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('production_stats')
+    .select('*')
+    .eq('id', 'main')
+    .single()
+  if (error) {
+    console.error('Erreur fetch production stats:', error)
+    return null
+  }
+  return data
+}
+
+// Récupérer la production journalière
+export async function fetchDailyProduction(): Promise<DbDailyProduction[] | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('daily_production')
+    .select('*')
+    .order('date', { ascending: false })
+    .limit(100)
+  if (error) {
+    console.error('Erreur fetch daily production:', error)
+    return null
+  }
+  return data
+}
+
+// Récupérer les dépenses
+export async function fetchExpenses(): Promise<DbExpense[] | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .order('date', { ascending: false })
+  if (error) {
+    console.error('Erreur fetch expenses:', error)
     return null
   }
   return data
@@ -186,6 +267,20 @@ export async function updateOrderStatus(id: string, status: string, validatedBy?
   return true
 }
 
+// Mettre à jour les statistiques de production
+export async function updateProductionStatsDb(updates: Partial<DbProductionStats>): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('production_stats')
+    .update(updates)
+    .eq('id', 'main')
+  if (error) {
+    console.error('Erreur update production stats:', error)
+    return false
+  }
+  return true
+}
+
 // ============ FONCTIONS DE CRÉATION ============
 
 // Créer une commande
@@ -229,6 +324,32 @@ export async function createDeliveryZone(zone: Omit<DbDeliveryZone, 'created_at'
   return true
 }
 
+// Créer un enregistrement de production journalière
+export async function createDailyProduction(production: Omit<DbDailyProduction, 'created_at' | 'updated_at'>): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('daily_production')
+    .insert(production)
+  if (error) {
+    console.error('Erreur create daily production:', error)
+    return false
+  }
+  return true
+}
+
+// Créer une dépense
+export async function createExpense(expense: Omit<DbExpense, 'created_at' | 'updated_at'>): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('expenses')
+    .insert(expense)
+  if (error) {
+    console.error('Erreur create expense:', error)
+    return false
+  }
+  return true
+}
+
 // ============ FONCTIONS DE SUPPRESSION ============
 
 export async function deleteProduct(id: string): Promise<boolean> {
@@ -252,6 +373,19 @@ export async function deleteDeliveryZone(id: string): Promise<boolean> {
     .eq('id', id)
   if (error) {
     console.error('Erreur delete zone:', error)
+    return false
+  }
+  return true
+}
+
+export async function deleteExpense(id: string): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('expenses')
+    .delete()
+    .eq('id', id)
+  if (error) {
+    console.error('Erreur delete expense:', error)
     return false
   }
   return true

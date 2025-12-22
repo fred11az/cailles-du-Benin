@@ -125,6 +125,7 @@ interface StoreState {
 
   // Comptabilité - Dépenses
   expenses: Expense[]
+  setExpenses: (expenses: Expense[]) => void
   addExpense: (expense: Expense) => void
   updateExpense: (id: string, updates: Partial<Expense>) => void
   deleteExpense: (id: string) => void
@@ -138,6 +139,7 @@ interface StoreState {
   productionStats: ProductionStats
   updateProductionStats: (updates: Partial<ProductionStats>) => void
   dailyProductions: DailyProduction[]
+  setDailyProductions: (productions: DailyProduction[]) => void
   addDailyProduction: (production: DailyProduction) => void
   collectEggs: (quantity: number) => void
   processQuails: (quantity: number, meatKg: number) => void
@@ -281,6 +283,7 @@ export const useStore = create<StoreState>()(
 
       // Comptabilité - Dépenses
       expenses: [],
+      setExpenses: (expenses) => set({ expenses }),
       addExpense: (expense) => set((state) => ({ expenses: [expense, ...state.expenses] })),
       updateExpense: (id, updates) =>
         set((state) => ({
@@ -321,6 +324,7 @@ export const useStore = create<StoreState>()(
           productionStats: { ...state.productionStats, ...updates, lastUpdated: new Date().toISOString() },
         })),
       dailyProductions: [],
+      setDailyProductions: (productions) => set({ dailyProductions: productions }),
       addDailyProduction: (production) =>
         set((state) => ({ dailyProductions: [production, ...state.dailyProductions] })),
       collectEggs: (quantity) =>
