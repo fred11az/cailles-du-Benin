@@ -1,9 +1,15 @@
 // Edge Function pour envoyer une notification email lors d'une nouvelle commande
+// Utilise SMTP directement (Gmail ou autre serveur mail)
 // Déployer avec: supabase functions deploy send-order-notification
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts'
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+// Configuration SMTP (à définir dans les secrets Supabase)
+const SMTP_HOST = Deno.env.get('SMTP_HOST') || 'smtp.gmail.com'
+const SMTP_PORT = parseInt(Deno.env.get('SMTP_PORT') || '465')
+const SMTP_USER = Deno.env.get('SMTP_USER') || ''
+const SMTP_PASSWORD = Deno.env.get('SMTP_PASSWORD') || ''
 const ADMIN_EMAIL = Deno.env.get('ADMIN_EMAIL') || 'fermemahutin@gmail.com'
 
 interface OrderPayload {
@@ -39,6 +45,15 @@ serve(async (req) => {
       })
     }
 
+    // Vérifier la configuration SMTP
+    if (!SMTP_USER || !SMTP_PASSWORD) {
+      console.error('Configuration SMTP manquante')
+      return new Response(JSON.stringify({ error: 'SMTP not configured' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
     const order = payload.record
 
     // Formater les items pour l'email
@@ -52,7 +67,7 @@ serve(async (req) => {
       timeStyle: 'short',
     })
 
-    // Contenu de l'email
+    // Contenu de l'email en HTML
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); padding: 20px; text-align: center;">
@@ -91,12 +106,6 @@ serve(async (req) => {
               <span>${order.total} FCFA</span>
             </div>
           </div>
-
-          <div style="text-align: center; margin-top: 20px;">
-            <a href="https://votre-site.com/admin" style="background: #10B981; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-block;">
-              Voir dans l'admin
-            </a>
-          </div>
         </div>
 
         <div style="text-align: center; padding: 20px; color: #9ca3af; font-size: 12px;">
@@ -105,33 +114,53 @@ serve(async (req) => {
       </div>
     `
 
-    // Envoyer l'email via Resend
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
+    // Version texte simple
+    const emailText = `
+Nouvelle Commande #${order.order_number}
+Date: ${orderDate}
+
+CLIENT:
+Nom: ${order.customer_name}
+Téléphone: ${order.customer_phone}
+Adresse: ${order.customer_address}
+
+PRODUITS:
+${itemsList}
+
+Sous-total: ${order.subtotal} FCFA
+Livraison: ${order.delivery_fee} FCFA
+TOTAL: ${order.total} FCFA
+
+--
+Mahutin Ferme - Cailles du Bénin
+    `
+
+    // Créer le client SMTP
+    const client = new SMTPClient({
+      connection: {
+        hostname: SMTP_HOST,
+        port: SMTP_PORT,
+        tls: true,
+        auth: {
+          username: SMTP_USER,
+          password: SMTP_PASSWORD,
+        },
       },
-      body: JSON.stringify({
-        from: 'Mahutin Ferme <notifications@votre-domaine.com>',
-        to: [ADMIN_EMAIL],
-        subject: `🥚 Nouvelle commande #${order.order_number} - ${order.total} FCFA`,
-        html: emailHtml,
-      }),
     })
 
-    const data = await res.json()
+    // Envoyer l'email
+    await client.send({
+      from: SMTP_USER,
+      to: ADMIN_EMAIL,
+      subject: `🥚 Nouvelle commande #${order.order_number} - ${order.total} FCFA`,
+      content: emailText,
+      html: emailHtml,
+    })
 
-    if (!res.ok) {
-      console.error('Erreur Resend:', data)
-      return new Response(JSON.stringify({ error: data }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      })
-    }
+    await client.close()
 
-    console.log('Email envoyé:', data)
-    return new Response(JSON.stringify({ success: true, data }), {
+    console.log('Email envoyé avec succès à', ADMIN_EMAIL)
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     })

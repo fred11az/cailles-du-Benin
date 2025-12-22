@@ -280,3 +280,20 @@ CREATE POLICY "Expenses visible par tous" ON expenses FOR SELECT USING (true);
 CREATE POLICY "Insert expenses" ON expenses FOR INSERT WITH CHECK (true);
 CREATE POLICY "Update expenses" ON expenses FOR UPDATE USING (true);
 CREATE POLICY "Delete expenses" ON expenses FOR DELETE USING (true);
+
+-- ============ CONFIGURATION WEBHOOK POUR NOTIFICATIONS EMAIL ============
+-- Le webhook doit être configuré dans le Dashboard Supabase:
+-- 1. Aller dans Database > Webhooks
+-- 2. Créer un nouveau webhook avec:
+--    - Nom: send-order-notification
+--    - Table: orders
+--    - Events: INSERT
+--    - Type: Supabase Edge Functions
+--    - Edge Function: send-order-notification
+--
+-- Configuration des secrets pour l'Edge Function (via Supabase Dashboard > Edge Functions > Secrets):
+--   SMTP_HOST=smtp.gmail.com
+--   SMTP_PORT=465
+--   SMTP_USER=votre-email@gmail.com
+--   SMTP_PASSWORD=votre-mot-de-passe-application
+--   ADMIN_EMAIL=fermemahutin@gmail.com
