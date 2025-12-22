@@ -138,6 +138,7 @@ interface StoreState {
   productionStats: ProductionStats
   updateProductionStats: (updates: Partial<ProductionStats>) => void
   dailyProductions: DailyProduction[]
+  setDailyProductions: (productions: DailyProduction[]) => void
   addDailyProduction: (production: DailyProduction) => void
   collectEggs: (quantity: number) => void
   processQuails: (quantity: number, meatKg: number) => void
@@ -321,6 +322,7 @@ export const useStore = create<StoreState>()(
           productionStats: { ...state.productionStats, ...updates, lastUpdated: new Date().toISOString() },
         })),
       dailyProductions: [],
+      setDailyProductions: (productions) => set({ dailyProductions: productions }),
       addDailyProduction: (production) =>
         set((state) => ({ dailyProductions: [production, ...state.dailyProductions] })),
       collectEggs: (quantity) =>

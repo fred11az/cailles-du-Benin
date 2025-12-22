@@ -8,20 +8,26 @@ import {
   fetchDeliveryZones,
   fetchProfessionalPricing,
   fetchOrders,
+  fetchProductionStats,
+  fetchDailyProduction,
   updateProfessionalPricing as updateProfessionalPricingDb,
   updateProduct as updateProductDb,
   updateDeliveryZone as updateDeliveryZoneDb,
   updateOrderStatus as updateOrderStatusDb,
+  updateProductionStatsDb,
   createOrder as createOrderDb,
   createProduct as createProductDb,
   deleteProduct as deleteProductDb,
   createDeliveryZone as createDeliveryZoneDb,
   deleteDeliveryZone as deleteDeliveryZoneDb,
+  createDailyProduction as createDailyProductionDb,
   DbProduct,
   DbDeliveryZone,
   DbProfessionalPricing,
+  DbProductionStats,
+  DbDailyProduction,
 } from '@/lib/supabase'
-import type { Product, DeliveryZone, ProfessionalPricing, Order } from '@/types'
+import type { Product, DeliveryZone, ProfessionalPricing, Order, ProductionStats, DailyProduction } from '@/types'
 
 // Convertir les données DB vers le format du store
 function dbProductToProduct(db: DbProduct): Product {
@@ -60,6 +66,32 @@ function dbPricingToPricing(db: DbProfessionalPricing): ProfessionalPricing {
   }
 }
 
+function dbProductionStatsToStats(db: DbProductionStats): ProductionStats {
+  return {
+    totalQuails: db.total_quails,
+    maleQuails: db.male_quails,
+    femaleQuails: db.female_quails,
+    eggsCollectedToday: db.eggs_collected_today,
+    totalEggsInStock: db.total_eggs_in_stock,
+    totalMeatInStock: db.total_meat_in_stock,
+    lastUpdated: db.last_updated,
+    lastUpdatedBy: db.last_updated_by,
+  }
+}
+
+function dbDailyProductionToProduction(db: DbDailyProduction): DailyProduction {
+  return {
+    id: db.id,
+    date: db.date,
+    eggsCollected: db.eggs_collected,
+    quailsProcessed: db.quails_processed,
+    quailsLost: db.quails_lost,
+    notes: db.notes,
+    createdAt: db.created_at,
+    createdBy: db.created_by,
+  }
+}
+
 export function useSupabaseSync() {
   const [isLoading, setIsLoading] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
@@ -67,6 +99,8 @@ export function useSupabaseSync() {
 
   const setProducts = useStore((state) => state.setProducts)
   const setZones = useStore((state) => state.setZones)
+  const updateProductionStats = useStore((state) => state.updateProductionStats)
+  const setDailyProductions = useStore((state) => state.setDailyProductions)
 
   useEffect(() => {
     async function loadData() {
@@ -78,10 +112,12 @@ export function useSupabaseSync() {
 
       try {
         // Charger les données en parallèle
-        const [products, zones, pricing] = await Promise.all([
+        const [products, zones, pricing, productionStats, dailyProduction] = await Promise.all([
           fetchProducts(),
           fetchDeliveryZones(),
           fetchProfessionalPricing(),
+          fetchProductionStats(),
+          fetchDailyProduction(),
         ])
 
         if (products) {
@@ -107,6 +143,14 @@ export function useSupabaseSync() {
           })
         }
 
+        if (productionStats) {
+          updateProductionStats(dbProductionStatsToStats(productionStats))
+        }
+
+        if (dailyProduction) {
+          setDailyProductions(dailyProduction.map(dbDailyProductionToProduction))
+        }
+
         setIsConnected(true)
         console.log('Données chargées depuis Supabase')
       } catch (err) {
@@ -118,7 +162,7 @@ export function useSupabaseSync() {
     }
 
     loadData()
-  }, [setProducts, setZones])
+  }, [setProducts, setZones, updateProductionStats, setDailyProductions])
 
   return { isLoading, isConnected, error, isSupabaseConfigured }
 }
@@ -215,6 +259,59 @@ export function useSyncToSupabase() {
     return deleteDeliveryZoneDb(id)
   }
 
+  const syncProductionStats = async (stats: Partial<ProductionStats>): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+
+    const dbUpdates: Record<string, unknown> = {}
+    if (stats.totalQuails !== undefined) dbUpdates.total_quails = stats.totalQuails
+    if (stats.maleQuails !== undefined) dbUpdates.male_quails = stats.maleQuails
+    if (stats.femaleQuails !== undefined) dbUpdates.female_quails = stats.femaleQuails
+    if (stats.eggsCollectedToday !== undefined) dbUpdates.eggs_collected_today = stats.eggsCollectedToday
+    if (stats.totalEggsInStock !== undefined) dbUpdates.total_eggs_in_stock = stats.totalEggsInStock
+    if (stats.totalMeatInStock !== undefined) dbUpdates.total_meat_in_stock = stats.totalMeatInStock
+    if (stats.lastUpdated !== undefined) dbUpdates.last_updated = stats.lastUpdated
+    if (stats.lastUpdatedBy !== undefined) dbUpdates.last_updated_by = stats.lastUpdatedBy
+
+    return updateProductionStatsDb(dbUpdates)
+  }
+
+  const addDailyProductionToDb = async (production: DailyProduction): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+    return createDailyProductionDb({
+      id: production.id,
+      date: production.date,
+      eggs_collected: production.eggsCollected,
+      quails_processed: production.quailsProcessed,
+      quails_lost: production.quailsLost,
+      notes: production.notes,
+      created_by: production.createdBy,
+    })
+  }
+
+  const addOrderToDb = async (order: Order): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+    const dbOrder = await createOrderDb({
+      order_number: order.orderNumber,
+      customer_name: order.customerName,
+      customer_phone: order.phone,
+      customer_address: order.address,
+      delivery_zone_id: order.deliveryZone.id,
+      items: order.items.map(item => ({
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price,
+      })),
+      subtotal: order.subtotal,
+      delivery_fee: order.deliveryFee,
+      total: order.total,
+      status: order.status,
+      validated_by: order.validatedBy,
+      notes: order.notes,
+    })
+    return dbOrder !== null
+  }
+
   return {
     syncProfessionalPricing,
     syncProduct,
@@ -224,6 +321,9 @@ export function useSyncToSupabase() {
     removeProductFromDb,
     addZoneToDb,
     removeZoneFromDb,
+    syncProductionStats,
+    addDailyProductionToDb,
+    addOrderToDb,
     isSupabaseConfigured,
   }
 }
