@@ -8,6 +8,7 @@ import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, CheckCircle } from 'lucide
 import Header from '@/components/ui/Header'
 import Footer from '@/components/ui/Footer'
 import { useStore, formatPrice, generateOrderNumber, validateBeninPhone } from '@/store/useStore'
+import { useSyncToSupabase } from '@/hooks/useSupabaseSync'
 import type { Order, DeliveryZone } from '@/types'
 
 export default function CartPage() {
@@ -32,6 +33,7 @@ export default function CartPage() {
   const clearCart = useStore((state) => state.clearCart)
   const getCartTotal = useStore((state) => state.getCartTotal)
   const addOrder = useStore((state) => state.addOrder)
+  const { addOrderToDb } = useSyncToSupabase()
 
   useEffect(() => {
     setMounted(true)
@@ -110,6 +112,9 @@ export default function CartPage() {
     }
 
     addOrder(order)
+    // Synchroniser avec Supabase
+    await addOrderToDb(order)
+
     setOrderNumber(newOrderNumber)
     setOrderSuccess(true)
     clearCart()

@@ -114,6 +114,7 @@ interface StoreState {
 
   // Commandes
   orders: Order[]
+  setOrders: (orders: Order[]) => void
   addOrder: (order: Order) => void
   updateOrderStatus: (orderId: string, status: Order['status'], validatedBy?: string) => void
   getOrdersByStatus: (status: Order['status']) => Order[]
@@ -222,6 +223,7 @@ export const useStore = create<StoreState>()(
 
       // Commandes
       orders: [],
+      setOrders: (orders) => set({ orders }),
       addOrder: (order) => set((state) => ({ orders: [order, ...state.orders] })),
       updateOrderStatus: (orderId, status, validatedBy) =>
         set((state) => {
