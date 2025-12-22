@@ -96,6 +96,17 @@ export interface DbDailyProduction {
   updated_at: string
 }
 
+export interface DbExpense {
+  id: string
+  date: string
+  category: string
+  description?: string
+  amount: number
+  created_by?: string
+  created_at: string
+  updated_at: string
+}
+
 // ============ FONCTIONS DE LECTURE ============
 
 // Récupérer les produits
@@ -179,6 +190,20 @@ export async function fetchDailyProduction(): Promise<DbDailyProduction[] | null
     .limit(100)
   if (error) {
     console.error('Erreur fetch daily production:', error)
+    return null
+  }
+  return data
+}
+
+// Récupérer les dépenses
+export async function fetchExpenses(): Promise<DbExpense[] | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('expenses')
+    .select('*')
+    .order('date', { ascending: false })
+  if (error) {
+    console.error('Erreur fetch expenses:', error)
     return null
   }
   return data
@@ -312,6 +337,19 @@ export async function createDailyProduction(production: Omit<DbDailyProduction, 
   return true
 }
 
+// Créer une dépense
+export async function createExpense(expense: Omit<DbExpense, 'created_at' | 'updated_at'>): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('expenses')
+    .insert(expense)
+  if (error) {
+    console.error('Erreur create expense:', error)
+    return false
+  }
+  return true
+}
+
 // ============ FONCTIONS DE SUPPRESSION ============
 
 export async function deleteProduct(id: string): Promise<boolean> {
@@ -335,6 +373,19 @@ export async function deleteDeliveryZone(id: string): Promise<boolean> {
     .eq('id', id)
   if (error) {
     console.error('Erreur delete zone:', error)
+    return false
+  }
+  return true
+}
+
+export async function deleteExpense(id: string): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('expenses')
+    .delete()
+    .eq('id', id)
+  if (error) {
+    console.error('Erreur delete expense:', error)
     return false
   }
   return true

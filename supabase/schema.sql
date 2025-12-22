@@ -205,7 +205,7 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Index pour daily_production
 CREATE INDEX IF NOT EXISTS idx_daily_production_date ON daily_production(date);
-CREATE INDEX IF NOT EXISTS idx_daily_production_type ON daily_production(type);
+CREATE INDEX IF NOT EXISTS idx_daily_production_created_by ON daily_production(created_by);
 
 -- Triggers pour updated_at
 DROP TRIGGER IF EXISTS update_production_stats_updated_at ON production_stats;
@@ -243,3 +243,40 @@ CREATE POLICY "Daily production visible par tous" ON daily_production FOR SELECT
 CREATE POLICY "Insert daily_production" ON daily_production FOR INSERT WITH CHECK (true);
 CREATE POLICY "Update daily_production" ON daily_production FOR UPDATE USING (true);
 CREATE POLICY "Delete daily_production" ON daily_production FOR DELETE USING (true);
+
+-- Table des dépenses (comptabilité)
+CREATE TABLE IF NOT EXISTS expenses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  date DATE NOT NULL,
+  category VARCHAR(50) NOT NULL CHECK (category IN ('provende', 'medicament', 'equipement', 'salaire', 'transport', 'electricite', 'eau', 'autre')),
+  description TEXT,
+  amount INTEGER NOT NULL,
+  created_by VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index pour expenses
+CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
+CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category);
+
+-- Trigger pour updated_at sur expenses
+DROP TRIGGER IF EXISTS update_expenses_updated_at ON expenses;
+CREATE TRIGGER update_expenses_updated_at
+  BEFORE UPDATE ON expenses
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Activer RLS sur expenses
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
+
+-- Policies pour expenses
+DROP POLICY IF EXISTS "Expenses visible par tous" ON expenses;
+DROP POLICY IF EXISTS "Insert expenses" ON expenses;
+DROP POLICY IF EXISTS "Update expenses" ON expenses;
+DROP POLICY IF EXISTS "Delete expenses" ON expenses;
+
+CREATE POLICY "Expenses visible par tous" ON expenses FOR SELECT USING (true);
+CREATE POLICY "Insert expenses" ON expenses FOR INSERT WITH CHECK (true);
+CREATE POLICY "Update expenses" ON expenses FOR UPDATE USING (true);
+CREATE POLICY "Delete expenses" ON expenses FOR DELETE USING (true);

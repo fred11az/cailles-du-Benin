@@ -125,6 +125,7 @@ interface StoreState {
 
   // Comptabilité - Dépenses
   expenses: Expense[]
+  setExpenses: (expenses: Expense[]) => void
   addExpense: (expense: Expense) => void
   updateExpense: (id: string, updates: Partial<Expense>) => void
   deleteExpense: (id: string) => void
@@ -282,6 +283,7 @@ export const useStore = create<StoreState>()(
 
       // Comptabilité - Dépenses
       expenses: [],
+      setExpenses: (expenses) => set({ expenses }),
       addExpense: (expense) => set((state) => ({ expenses: [expense, ...state.expenses] })),
       updateExpense: (id, updates) =>
         set((state) => ({

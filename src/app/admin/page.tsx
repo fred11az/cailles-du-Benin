@@ -319,11 +319,12 @@ function DashboardTab({
 function AccountingTab() {
   const expenses = useStore((state) => state.expenses)
   const addExpense = useStore((state) => state.addExpense)
-  const deleteExpense = useStore((state) => state.deleteExpense)
+  const deleteExpenseStore = useStore((state) => state.deleteExpense)
   const getTotalExpenses = useStore((state) => state.getTotalExpenses)
   const getTotalRevenue = useStore((state) => state.getTotalRevenue)
   const getNetProfit = useStore((state) => state.getNetProfit)
   const adminSession = useStore((state) => state.adminSession)
+  const { addExpenseToDb, removeExpenseFromDb } = useSyncToSupabase()
 
   const [showAddForm, setShowAddForm] = useState(false)
   const [newExpense, setNewExpense] = useState({
@@ -333,14 +334,16 @@ function AccountingTab() {
     amount: 0,
   })
 
-  const handleAddExpense = () => {
+  const handleAddExpense = async () => {
     if (newExpense.description && newExpense.amount > 0) {
-      addExpense({
+      const expense = {
         id: crypto.randomUUID(),
         ...newExpense,
         createdAt: new Date().toISOString(),
         createdBy: adminSession.adminName,
-      })
+      }
+      addExpense(expense)
+      await addExpenseToDb(expense)
       setNewExpense({
         date: new Date().toISOString().split('T')[0],
         category: 'provende',
@@ -349,6 +352,11 @@ function AccountingTab() {
       })
       setShowAddForm(false)
     }
+  }
+
+  const handleDeleteExpense = async (id: string) => {
+    deleteExpenseStore(id)
+    await removeExpenseFromDb(id)
   }
 
   // Grouper les dépenses par catégorie
@@ -497,7 +505,7 @@ function AccountingTab() {
                     <td className="p-4 font-semibold text-red-600">{formatPrice(expense.amount)}</td>
                     <td className="p-4">
                       <button
-                        onClick={() => deleteExpense(expense.id)}
+                        onClick={() => handleDeleteExpense(expense.id)}
                         className="p-2 hover:bg-red-100 text-red-600 rounded-lg"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -2228,7 +2236,7 @@ function AddOrderModal({
               <span className="text-primary">{formatPrice(total)}</span>
             </div>
           </div>
-          <button onClick={handleSubmit} className="btn-primary w-full">
+          <button type="button" onClick={handleSubmit} className="btn-primary w-full">
             Créer la commande
           </button>
         </div>

@@ -10,6 +10,7 @@ import {
   fetchOrders,
   fetchProductionStats,
   fetchDailyProduction,
+  fetchExpenses,
   updateProfessionalPricing as updateProfessionalPricingDb,
   updateProduct as updateProductDb,
   updateDeliveryZone as updateDeliveryZoneDb,
@@ -21,13 +22,16 @@ import {
   createDeliveryZone as createDeliveryZoneDb,
   deleteDeliveryZone as deleteDeliveryZoneDb,
   createDailyProduction as createDailyProductionDb,
+  createExpense as createExpenseDb,
+  deleteExpense as deleteExpenseDb,
   DbProduct,
   DbDeliveryZone,
   DbProfessionalPricing,
   DbProductionStats,
   DbDailyProduction,
+  DbExpense,
 } from '@/lib/supabase'
-import type { Product, DeliveryZone, ProfessionalPricing, Order, ProductionStats, DailyProduction } from '@/types'
+import type { Product, DeliveryZone, ProfessionalPricing, Order, ProductionStats, DailyProduction, Expense } from '@/types'
 
 // Convertir les données DB vers le format du store
 function dbProductToProduct(db: DbProduct): Product {
@@ -92,6 +96,18 @@ function dbDailyProductionToProduction(db: DbDailyProduction): DailyProduction {
   }
 }
 
+function dbExpenseToExpense(db: DbExpense): Expense {
+  return {
+    id: db.id,
+    date: db.date,
+    category: db.category as Expense['category'],
+    description: db.description || '',
+    amount: db.amount,
+    createdAt: db.created_at,
+    createdBy: db.created_by,
+  }
+}
+
 export function useSupabaseSync() {
   const [isLoading, setIsLoading] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
@@ -101,6 +117,7 @@ export function useSupabaseSync() {
   const setZones = useStore((state) => state.setZones)
   const updateProductionStats = useStore((state) => state.updateProductionStats)
   const setDailyProductions = useStore((state) => state.setDailyProductions)
+  const setExpenses = useStore((state) => state.setExpenses)
 
   useEffect(() => {
     async function loadData() {
@@ -112,12 +129,13 @@ export function useSupabaseSync() {
 
       try {
         // Charger les données en parallèle
-        const [products, zones, pricing, productionStats, dailyProduction] = await Promise.all([
+        const [products, zones, pricing, productionStats, dailyProduction, expenses] = await Promise.all([
           fetchProducts(),
           fetchDeliveryZones(),
           fetchProfessionalPricing(),
           fetchProductionStats(),
           fetchDailyProduction(),
+          fetchExpenses(),
         ])
 
         if (products) {
@@ -151,6 +169,10 @@ export function useSupabaseSync() {
           setDailyProductions(dailyProduction.map(dbDailyProductionToProduction))
         }
 
+        if (expenses) {
+          setExpenses(expenses.map(dbExpenseToExpense))
+        }
+
         setIsConnected(true)
         console.log('Données chargées depuis Supabase')
       } catch (err) {
@@ -162,7 +184,7 @@ export function useSupabaseSync() {
     }
 
     loadData()
-  }, [setProducts, setZones, updateProductionStats, setDailyProductions])
+  }, [setProducts, setZones, updateProductionStats, setDailyProductions, setExpenses])
 
   return { isLoading, isConnected, error, isSupabaseConfigured }
 }
@@ -312,6 +334,23 @@ export function useSyncToSupabase() {
     return dbOrder !== null
   }
 
+  const addExpenseToDb = async (expense: Expense): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+    return createExpenseDb({
+      id: expense.id,
+      date: expense.date,
+      category: expense.category,
+      description: expense.description,
+      amount: expense.amount,
+      created_by: expense.createdBy,
+    })
+  }
+
+  const removeExpenseFromDb = async (id: string): Promise<boolean> => {
+    if (!isSupabaseConfigured) return true
+    return deleteExpenseDb(id)
+  }
+
   return {
     syncProfessionalPricing,
     syncProduct,
@@ -324,6 +363,8 @@ export function useSyncToSupabase() {
     syncProductionStats,
     addDailyProductionToDb,
     addOrderToDb,
+    addExpenseToDb,
+    removeExpenseFromDb,
     isSupabaseConfigured,
   }
 }
