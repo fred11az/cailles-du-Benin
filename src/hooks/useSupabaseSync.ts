@@ -30,6 +30,7 @@ import {
   DbProductionStats,
   DbDailyProduction,
   DbExpense,
+  DbOrder,
 } from '@/lib/supabase'
 import type { Product, DeliveryZone, ProfessionalPricing, Order, ProductionStats, DailyProduction, Expense } from '@/types'
 
@@ -108,6 +109,50 @@ function dbExpenseToExpense(db: DbExpense): Expense {
   }
 }
 
+function dbOrderToOrder(db: DbOrder, zones: DeliveryZone[], products: Product[]): Order {
+  const zone = zones.find(z => z.id === db.delivery_zone_id) || {
+    id: db.delivery_zone_id,
+    name: 'Zone inconnue',
+    price: db.delivery_fee,
+    estimatedTime: '',
+    isActive: true,
+  }
+
+  return {
+    id: db.id,
+    orderNumber: db.order_number,
+    customerName: db.customer_name,
+    phone: db.customer_phone,
+    address: db.customer_address,
+    deliveryZone: zone,
+    items: db.items.map(item => {
+      const product = products.find(p => p.id === item.product_id) || {
+        id: item.product_id,
+        name: item.product_name,
+        description: '',
+        price: item.price,
+        unit: 'unité',
+        category: 'eggs' as const,
+        image: '/images/eggs.jpg',
+        stock: 0,
+        isAvailable: true,
+      }
+      return {
+        product,
+        quantity: item.quantity,
+      }
+    }),
+    subtotal: db.subtotal,
+    deliveryFee: db.delivery_fee,
+    total: db.total,
+    status: db.status,
+    validatedBy: db.validated_by,
+    notes: db.notes,
+    createdAt: db.created_at,
+    updatedAt: db.updated_at,
+  }
+}
+
 export function useSupabaseSync() {
   const [isLoading, setIsLoading] = useState(true)
   const [isConnected, setIsConnected] = useState(false)
@@ -115,6 +160,7 @@ export function useSupabaseSync() {
 
   const setProducts = useStore((state) => state.setProducts)
   const setZones = useStore((state) => state.setZones)
+  const setOrders = useStore((state) => state.setOrders)
   const updateProductionStats = useStore((state) => state.updateProductionStats)
   const setDailyProductions = useStore((state) => state.setDailyProductions)
   const setExpenses = useStore((state) => state.setExpenses)
@@ -129,21 +175,30 @@ export function useSupabaseSync() {
 
       try {
         // Charger les données en parallèle
-        const [products, zones, pricing, productionStats, dailyProduction, expenses] = await Promise.all([
+        const [products, zones, pricing, orders, productionStats, dailyProduction, expenses] = await Promise.all([
           fetchProducts(),
           fetchDeliveryZones(),
           fetchProfessionalPricing(),
+          fetchOrders(),
           fetchProductionStats(),
           fetchDailyProduction(),
           fetchExpenses(),
         ])
 
+        // Convertir les produits et zones d'abord (nécessaires pour les commandes)
+        const convertedProducts = products ? products.map(dbProductToProduct) : []
+        const convertedZones = zones ? zones.map(dbZoneToZone) : []
+
         if (products) {
-          setProducts(products.map(dbProductToProduct))
+          setProducts(convertedProducts)
         }
 
         if (zones) {
-          setZones(zones.map(dbZoneToZone))
+          setZones(convertedZones)
+        }
+
+        if (orders) {
+          setOrders(orders.map(o => dbOrderToOrder(o, convertedZones, convertedProducts)))
         }
 
         if (pricing) {
@@ -184,7 +239,7 @@ export function useSupabaseSync() {
     }
 
     loadData()
-  }, [setProducts, setZones, updateProductionStats, setDailyProductions, setExpenses])
+  }, [setProducts, setZones, setOrders, updateProductionStats, setDailyProductions, setExpenses])
 
   return { isLoading, isConnected, error, isSupabaseConfigured }
 }
