@@ -39,6 +39,13 @@ export default function CartPage() {
     setMounted(true)
   }, [])
 
+  // Scroll to top when order is successful
+  useEffect(() => {
+    if (orderSuccess) {
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [orderSuccess])
+
   if (!mounted) {
     return (
       <main className="min-h-screen">
