@@ -71,20 +71,28 @@ export default function CartPage() {
 
     if (!formData.customerName.trim()) {
       newErrors.customerName = 'Le nom est requis'
+    } else if (formData.customerName.trim().length < 3) {
+      newErrors.customerName = 'Le nom doit contenir au moins 3 caract\u00e8res'
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Le téléphone est requis'
+      newErrors.phone = 'Le t\u00e9l\u00e9phone est requis'
     } else if (!validateBeninPhone(formData.phone)) {
-      newErrors.phone = 'Numéro de téléphone invalide (format: 01XXXXXXXX - 10 chiffres)'
+      newErrors.phone = 'Num\u00e9ro de t\u00e9l\u00e9phone invalide (format: 01XXXXXXXX - 10 chiffres)'
     }
 
     if (!formData.address.trim()) {
       newErrors.address = "L'adresse est requise"
+    } else if (formData.address.trim().length < 10) {
+      newErrors.address = "L'adresse doit \u00eatre plus d\u00e9taill\u00e9e (minimum 10 caract\u00e8res)"
     }
 
     if (!selectedZone) {
-      newErrors.zone = 'Veuillez sélectionner une zone de livraison'
+      newErrors.zone = 'Veuillez s\u00e9lectionner une zone de livraison'
+    }
+
+    if (cart.length === 0) {
+      newErrors.cart = 'Votre panier est vide'
     }
 
     setErrors(newErrors)
@@ -94,38 +102,54 @@ export default function CartPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!validateForm() || cart.length === 0) return
+    if (!validateForm()) {
+      // Scroll vers le haut pour voir les erreurs
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
 
     setIsSubmitting(true)
 
-    // Simuler un délai de traitement
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const newOrderNumber = generateOrderNumber()
+      const order: Order = {
+        id: crypto.randomUUID(),
+        orderNumber: newOrderNumber,
+        customerName: formData.customerName.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        deliveryZone: selectedZone!,
+        items: [...cart],
+        subtotal,
+        deliveryFee,
+        total,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
 
-    const newOrderNumber = generateOrderNumber()
-    const order: Order = {
-      id: crypto.randomUUID(),
-      orderNumber: newOrderNumber,
-      customerName: formData.customerName,
-      phone: formData.phone,
-      address: formData.address,
-      deliveryZone: selectedZone!,
-      items: [...cart],
-      subtotal,
-      deliveryFee,
-      total,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      // Ajouter la commande localement
+      addOrder(order)
+
+      // Synchroniser avec Supabase - attendre le r\u00e9sultat
+      const syncSuccess = await addOrderToDb(order)
+
+      if (!syncSuccess) {
+        // Si la synchronisation a \u00e9chou\u00e9, on informe quand m\u00eame l'utilisateur
+        // mais on garde la commande dans le store local
+        console.error('La commande a \u00e9t\u00e9 enregistr\u00e9e localement mais la synchronisation a \u00e9chou\u00e9')
+      }
+
+      // Afficher le succ\u00e8s dans tous les cas car la commande est au moins locale
+      setOrderNumber(newOrderNumber)
+      setOrderSuccess(true)
+      clearCart()
+    } catch (error) {
+      console.error('Erreur lors de la cr\u00e9ation de la commande:', error)
+      alert('Une erreur est survenue. Veuillez r\u00e9essayer ou nous contacter sur WhatsApp.')
+    } finally {
+      setIsSubmitting(false)
     }
-
-    addOrder(order)
-    // Synchroniser avec Supabase
-    await addOrderToDb(order)
-
-    setOrderNumber(newOrderNumber)
-    setOrderSuccess(true)
-    clearCart()
-    setIsSubmitting(false)
   }
 
   if (orderSuccess) {

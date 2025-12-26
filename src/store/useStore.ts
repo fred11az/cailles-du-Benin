@@ -224,7 +224,34 @@ export const useStore = create<StoreState>()(
       // Commandes
       orders: [],
       setOrders: (orders) => set({ orders }),
-      addOrder: (order) => set((state) => ({ orders: [order, ...state.orders] })),
+      addOrder: (order) => set((state) => {
+        // Si la commande est déjà validée (par exemple depuis l'admin), déduire le stock immédiatement
+        if (order.status === 'validated') {
+          const newProductionStats = { ...state.productionStats }
+
+          order.items.forEach((item) => {
+            if (item.product.category === 'eggs') {
+              // Déduire les œufs (1 plateau = 30 œufs)
+              const eggsToDeduct = item.quantity * 30
+              newProductionStats.totalEggsInStock = Math.max(0, newProductionStats.totalEggsInStock - eggsToDeduct)
+            } else if (item.product.category === 'meat') {
+              // Déduire la viande (par unité de caille)
+              newProductionStats.totalMeatInStock = Math.max(0, newProductionStats.totalMeatInStock - item.quantity)
+              // Déduire du nombre de mâles (1 commande = 1 caille mâle)
+              newProductionStats.maleQuails = Math.max(0, newProductionStats.maleQuails - item.quantity)
+              newProductionStats.totalQuails = Math.max(0, newProductionStats.totalQuails - item.quantity)
+            }
+          })
+          newProductionStats.lastUpdated = new Date().toISOString()
+
+          return {
+            orders: [order, ...state.orders],
+            productionStats: newProductionStats,
+          }
+        }
+
+        return { orders: [order, ...state.orders] }
+      }),
       updateOrderStatus: (orderId, status, validatedBy) =>
         set((state) => {
           const order = state.orders.find((o) => o.id === orderId)
