@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Image from 'next/image'
 import {
   LayoutDashboard,
@@ -45,10 +45,11 @@ import { EXPENSE_CATEGORIES, PROFESSIONAL_CATEGORIES } from '@/types'
 
 type TabType = 'dashboard' | 'orders' | 'products' | 'zones' | 'accounting' | 'production' | 'professionnels'
 
-export default function AdminPage() {
+function AdminContent() {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [mounted, setMounted] = useState(false)
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const adminSession = useStore((state) => state.adminSession)
@@ -56,6 +57,15 @@ export default function AdminPage() {
   const orders = useStore((state) => state.orders)
   const products = useStore((state) => state.products)
   const zones = useStore((state) => state.zones)
+
+  // Lire l'onglet actif depuis l'URL, avec 'dashboard' par d\u00e9faut
+  const activeTab = (searchParams.get('tab') as TabType) || 'dashboard'
+
+  const setActiveTab = (tab: TabType) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', tab)
+    router.push(`${pathname}?${params.toString()}`)
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -241,6 +251,19 @@ export default function AdminPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+// Wrapper avec Suspense pour useSearchParams
+export default function AdminPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    }>
+      <AdminContent />
+    </Suspense>
   )
 }
 
@@ -1634,8 +1657,19 @@ function ZonesTab() {
   }
 
   const handleDelete = async (zoneId: string) => {
-    deleteZoneStore(zoneId)
-    await removeZoneFromDb(zoneId)
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette zone de livraison ?')) {
+      return
+    }
+
+    // Supprimer de Supabase d'abord
+    const success = await removeZoneFromDb(zoneId)
+
+    // Ne supprimer localement que si la suppression Supabase a r\u00e9ussi (ou si Supabase n'est pas configur\u00e9)
+    if (success) {
+      deleteZoneStore(zoneId)
+    } else {
+      alert('Erreur lors de la suppression de la zone. Veuillez r\u00e9essayer.')
+    }
   }
 
   return (
@@ -2110,6 +2144,7 @@ function AddOrderModal({
   zones: DeliveryZone[]
   onAdd: (order: Order) => void | Promise<void>
 }) {
+  const adminSession = useStore((state) => state.adminSession)
   const [formData, setFormData] = useState({
     customerName: '',
     phone: '',
@@ -2117,6 +2152,7 @@ function AddOrderModal({
     zoneId: '',
     items: [] as { productId: string; quantity: number }[],
   })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const activeZones = zones.filter((z) => z.isActive)
   const selectedZone = zones.find((z) => z.id === formData.zoneId)
@@ -2138,23 +2174,52 @@ function AddOrderModal({
     }
   }
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.customerName.trim()) {
+      newErrors.customerName = 'Le nom du client est requis'
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Le t\u00e9l\u00e9phone est requis'
+    }
+
+    if (!formData.address.trim()) {
+      newErrors.address = "L'adresse est requise"
+    }
+
+    if (!selectedZone) {
+      newErrors.zone = 'Veuillez s\u00e9lectionner une zone de livraison'
+    }
+
+    if (formData.items.length === 0) {
+      newErrors.items = 'Veuillez ajouter au moins un produit'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = () => {
-    if (!formData.customerName || !formData.phone || !selectedZone || formData.items.length === 0) return
+    if (!validateForm()) return
+
     const order: Order = {
       id: crypto.randomUUID(),
       orderNumber: generateOrderNumber(),
       customerName: formData.customerName,
       phone: formData.phone,
       address: formData.address,
-      deliveryZone: selectedZone,
+      deliveryZone: selectedZone!,
       items: formData.items.map((item) => ({
         product: products.find((p) => p.id === item.productId)!,
         quantity: item.quantity,
       })),
       subtotal,
-      deliveryFee: selectedZone.price,
+      deliveryFee: selectedZone!.price,
       total,
-      status: 'pending',
+      status: 'validated', // Commandes admin sont directement valid\u00e9es
+      validatedBy: adminSession.adminName,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -2173,40 +2238,60 @@ function AddOrderModal({
           </button>
         </div>
         <div className="p-6 space-y-4">
-          <input
-            type="text"
-            placeholder="Nom du client"
-            value={formData.customerName}
-            onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-            className="input-field"
-          />
-          <input
-            type="tel"
-            placeholder="Téléphone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="input-field"
-          />
-          <textarea
-            placeholder="Adresse"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            className="input-field"
-          />
-          <select
-            value={formData.zoneId}
-            onChange={(e) => setFormData({ ...formData, zoneId: e.target.value })}
-            className="input-field"
-          >
-            <option value="">Sélectionnez une zone</option>
-            {activeZones.map((zone) => (
-              <option key={zone.id} value={zone.id}>
-                {zone.name} - {formatPrice(zone.price)}
-              </option>
-            ))}
-          </select>
           <div>
-            <p className="font-medium mb-2">Produits</p>
+            <input
+              type="text"
+              placeholder="Nom du client *"
+              value={formData.customerName}
+              onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+              className={`input-field ${errors.customerName ? 'border-red-500' : ''}`}
+            />
+            {errors.customerName && (
+              <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>
+            )}
+          </div>
+          <div>
+            <input
+              type="tel"
+              placeholder="T\u00e9l\u00e9phone *"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className={`input-field ${errors.phone ? 'border-red-500' : ''}`}
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+            )}
+          </div>
+          <div>
+            <textarea
+              placeholder="Adresse *"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              className={`input-field ${errors.address ? 'border-red-500' : ''}`}
+            />
+            {errors.address && (
+              <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+            )}
+          </div>
+          <div>
+            <select
+              value={formData.zoneId}
+              onChange={(e) => setFormData({ ...formData, zoneId: e.target.value })}
+              className={`input-field ${errors.zone ? 'border-red-500' : ''}`}
+            >
+              <option value="">S\u00e9lectionnez une zone *</option>
+              {activeZones.map((zone) => (
+                <option key={zone.id} value={zone.id}>
+                  {zone.name} - {formatPrice(zone.price)}
+                </option>
+              ))}
+            </select>
+            {errors.zone && (
+              <p className="text-red-500 text-sm mt-1">{errors.zone}</p>
+            )}
+          </div>
+          <div>
+            <p className="font-medium mb-2">Produits *</p>
             <div className="flex flex-wrap gap-2">
               {products.map((product) => (
                 <button key={product.id} onClick={() => handleAddItem(product.id)} className="btn-outline text-sm">
@@ -2229,6 +2314,9 @@ function AddOrderModal({
                 })}
               </div>
             )}
+            {errors.items && (
+              <p className="text-red-500 text-sm mt-1">{errors.items}</p>
+            )}
           </div>
           <div className="border-t pt-4">
             <div className="flex justify-between text-xl font-bold">
@@ -2237,7 +2325,7 @@ function AddOrderModal({
             </div>
           </div>
           <button type="button" onClick={handleSubmit} className="btn-primary w-full">
-            Créer la commande
+            Cr\u00e9er la commande
           </button>
         </div>
       </div>
