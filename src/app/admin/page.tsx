@@ -37,7 +37,12 @@ import {
   Users,
   Store,
   UtensilsCrossed,
+  Download,
+  MessageCircle,
+  Printer,
 } from 'lucide-react'
+import InvoicePreview from '@/components/InvoicePreview'
+import { downloadInvoice, shareInvoiceViaWhatsApp } from '@/utils/invoiceGenerator'
 import { useStore, formatPrice, generateOrderNumber, formatDate } from '@/store/useStore'
 import { useSyncToSupabase } from '@/hooks/useSupabaseSync'
 import type { Order, Product, DeliveryZone, Expense, ExpenseCategory, ProfessionalCategory } from '@/types'
@@ -1037,6 +1042,7 @@ function OrdersTab() {
   const [filter, setFilter] = useState<Order['status'] | 'all'>('all')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null)
 
   const filteredOrders = filter === 'all' ? orders : orders.filter((o) => o.status === filter)
 
@@ -1113,21 +1119,30 @@ function OrdersTab() {
                       <StatusBadge status={order.status} />
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => setSelectedOrder(order)} className="p-2 hover:bg-gray-100 rounded-lg">
+                      <div className="flex items-center space-x-1">
+                        <button onClick={() => setSelectedOrder(order)} className="p-2 hover:bg-gray-100 rounded-lg" title="Voir détails">
                           <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setInvoiceOrder(order)}
+                          className="p-2 hover:bg-primary/10 text-primary rounded-lg"
+                          title="Facture"
+                        >
+                          <FileText className="w-4 h-4" />
                         </button>
                         {order.status === 'pending' && (
                           <>
                             <button
                               onClick={() => handleStatusChange(order.id, 'validated')}
                               className="p-2 hover:bg-green-100 text-green-600 rounded-lg"
+                              title="Valider"
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleStatusChange(order.id, 'cancelled')}
                               className="p-2 hover:bg-red-100 text-red-600 rounded-lg"
+                              title="Annuler"
                             >
                               <XCircle className="w-4 h-4" />
                             </button>
@@ -1137,6 +1152,7 @@ function OrdersTab() {
                           <button
                             onClick={() => handleStatusChange(order.id, 'delivered')}
                             className="p-2 hover:bg-blue-100 text-blue-600 rounded-lg"
+                            title="Marquer livré"
                           >
                             <CheckCircle className="w-4 h-4" />
                           </button>
@@ -1151,10 +1167,11 @@ function OrdersTab() {
         )}
       </div>
 
-      {selectedOrder && <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
+      {selectedOrder && <OrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onShowInvoice={setInvoiceOrder} />}
       {showAddModal && (
         <AddOrderModal onClose={() => setShowAddModal(false)} products={products} zones={zones} onAdd={handleAddOrder} />
       )}
+      {invoiceOrder && <InvoicePreview order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />}
     </div>
   )
 }
@@ -2070,7 +2087,32 @@ function Modal({ title, children, onClose }: { title: string; children: React.Re
   )
 }
 
-function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => void }) {
+function OrderDetailModal({ order, onClose, onShowInvoice }: { order: Order; onClose: () => void; onShowInvoice?: (order: Order) => void }) {
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
+
+  const handleDownload = async () => {
+    setIsDownloading(true)
+    try {
+      await downloadInvoice(order)
+    } catch (error) {
+      console.error('Error downloading invoice:', error)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const handleShareWhatsApp = async () => {
+    setIsSharing(true)
+    try {
+      await shareInvoiceViaWhatsApp(order)
+    } catch (error) {
+      console.error('Error sharing invoice:', error)
+    } finally {
+      setIsSharing(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
@@ -2125,6 +2167,41 @@ function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => voi
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
               <span className="text-primary">{formatPrice(order.total)}</span>
+            </div>
+          </div>
+
+          {/* Actions Facture */}
+          <div className="border-t pt-4">
+            <h4 className="font-semibold text-gray-900 mb-3">Facture</h4>
+            <div className="flex flex-wrap gap-2">
+              {onShowInvoice && (
+                <button
+                  onClick={() => {
+                    onClose()
+                    onShowInvoice(order)
+                  }}
+                  className="flex items-center space-x-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Voir la facture</span>
+                </button>
+              )}
+              <button
+                onClick={handleDownload}
+                disabled={isDownloading}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                <Download className="w-4 h-4" />
+                <span>{isDownloading ? 'Téléchargement...' : 'Télécharger PDF'}</span>
+              </button>
+              <button
+                onClick={handleShareWhatsApp}
+                disabled={isSharing}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>{isSharing ? 'Envoi...' : 'WhatsApp'}</span>
+              </button>
             </div>
           </div>
         </div>
